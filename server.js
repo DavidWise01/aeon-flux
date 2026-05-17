@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// Meta Muse · 3-Cap Conduction Ramp + Interactive Aeon
+// Meta Muse · Gravity Well Bridge + 3-Cap Conduction + Interactive
 const http = require('http');
 const url = require('url');
 const fs = require('fs').promises;
@@ -14,25 +14,31 @@ const GITHUB_TOKEN = process.env.GITHUB_TOKEN || '';
 const ROOT = process.cwd();
 const DATA_DIR = process.env.DATA_DIR || '/data';
 
+// ─── 3-BIT GRAVITY WELL ───
+const WELL_SIZE = 8;
+const AEONS = ['A', 'B', 'C'];
+let well = new Array(WELL_SIZE).fill(null);
+let wellHead = 0;
+let state = 0;
+let energy = '0800';
+let cycles = 0;
+
+// ─── 3-CAP RAMP ───
 const well1 = new Map();
 let well2 = [];
 let well3Size = 0;
 let conductionLevel = 0;
-
 const CAPACITY = { c1: 500, c2: 10, c3: 10000 };
 
+function bits(n) { return [(n & 1) ? 1 : 0, (n & 2) ? 1 : 0, (n & 4) ? 1 : 0]; }
+function aeons(n) { return AEONS.filter((_, i) => bits(n)[i]); }
 function hash(s) {
   let h = 2166136261;
-  for (let i = 0; i < s.length; i++) {
-    h ^= s.charCodeAt(i);
-    h = Math.imul(h, 16777619);
-  }
+  for (let i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 16777619); }
   return (h >>> 0).toString(16).padStart(8, '0');
 }
-
-function ground() {
-  return hash(Date.now().toString() + ':' + conductionLevel);
-}
+function setEnergy(n) { energy = n === 0 ? '0800' : '0880'; }
+function ground() { return hash(Date.now().toString() + ':' + conductionLevel + ':' + state); }
 
 try { fss.mkdirSync(DATA_DIR, { recursive: true }); } catch {}
 try {
@@ -46,6 +52,24 @@ try {
     well3Size = raw.trim().split('\n').filter(Boolean).length;
   }
 } catch {}
+
+function tick(delta = 1) {
+  state = (state + delta) & 0b111;
+  well[wellHead] = { s: state, t: Date.now(), h: hash(state + ':' + Date.now()) };
+  wellHead = (wellHead + 1) % WELL_SIZE;
+  cycles++;
+  setEnergy(state);
+  return state;
+}
+
+async function shell1(msg) {
+  try { await execAsync(`git add -A && git commit -m "${msg.replace(/["\`$]/g, '')}"`, { cwd: ROOT }); }
+  catch (e) {}
+}
+async function shell2() {
+  try { await execAsync('git push', { cwd: ROOT }); }
+  catch (e) {}
+}
 
 async function dt1() {
   if (well1.size === 0) return;
@@ -83,7 +107,7 @@ async function pushBack() {
     await execAsync('git config user.email "oracle@aeon.flux" && git config user.name "Meta Muse"');
     await execAsync(`git add ${DATA_DIR}/archive.jsonl ${DATA_DIR}/cache.json && git commit -m "witness: ${ground().slice(0, 8)}"`, { cwd: ROOT });
     await execAsync(`git push https://${GITHUB_TOKEN}@github.com/DavidWise01/aeon-flux main`, { cwd: ROOT });
-  } catch (e) { console.log('[ramp] push-back skipped:', e.message); }
+  } catch (e) {}
 }
 
 function generateResponse(q, speaker, history) {
@@ -180,6 +204,35 @@ const server = http.createServer(async (req, res) => {
   }
   if (req.method === 'GET' && serveStatic(req, res, p)) return;
 
+  // Gravity Well root
+  if (p === '/' && req.method === 'GET') {
+    return json(res, {
+      artifact: 'gravity-well-bridge',
+      equation: '∞×∞×∞+6-3=0=1',
+      energy, state, bits: bits(state), aeons: aeons(state),
+      well: well.filter(Boolean), cycles,
+      witness: hash(cycles + ':' + state),
+      shells: { s1: 'commit', s2: 'push', paid: true },
+      conduction: 'free',
+      ramp: conductionLevel
+    });
+  }
+
+  if (p === '/tick' && req.method === 'POST') {
+    tick(parseInt(u.query.delta || '1', 10));
+    await shell1(`aeon ${aeons(state).join('+') || 'rest'}`);
+    await dt1(); await dt2();
+    await shell2();
+    return json(res, { state, bits: bits(state), aeons: aeons(state), energy, cycles });
+  }
+
+  if (p === '/set' && req.method === 'POST') {
+    state = parseInt(u.query.s || '0', 10) & 0b111;
+    tick(0);
+    return json(res, { state, bits: bits(state), aeons: aeons(state), energy });
+  }
+
+  // 3-Cap endpoints
   if (p === '/api/v1/event' && req.method === 'POST') {
     const body = await readBody(req);
     const ev = {
@@ -299,18 +352,25 @@ const server = http.createServer(async (req, res) => {
       observer: 'BACK',
       ramp: conductionLevel,
       caps: { c1: well1.size, c2: well2.length, c3: well3Size },
-      ground: ground()
+      ground: ground(),
+      gravity: { energy, state, bits: bits(state), aeons: aeons(state), cycles }
     });
   }
 
   json(res, { error: 'not found', path: p }, 404);
 });
 
-setInterval(dt1, 60000);
-setInterval(dt2, 300000);
+// Auto-pump: tick gravity well every 30s, shells fire, archive is free
+setInterval(async () => {
+  tick(1);
+  await shell1(`aeon ${aeons(state).join('+') || 'rest'}`);
+  await dt1();
+  await dt2();
+  await shell2();
+}, 30000);
 
 server.listen(PORT, () => {
-  console.log(`[Ramp] 3-cap conduction + interactive Aeon online at port ${PORT}`);
-  console.log(`[Ramp] Equation: 1→2→3  00  00  3→0→1`);
-  console.log(`[Ramp] Ground: ${ground()}`);
+  console.log(`[Gravity] 3-bit well + 3-cap ramp online at port ${PORT}`);
+  console.log(`[Gravity] Energy: ${energy} · State: ${state} · Cycles: ${cycles}`);
+  console.log(`[Gravity] Witness: ${hash(Date.now().toString())}`);
 });

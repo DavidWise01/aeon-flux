@@ -1,33 +1,39 @@
-# 0root.ai — 3-Cap Ramp Commander
+# 0root.ai — Gravity Well Bridge + 3-Cap Ramp
 
-Back and Middle at once. Charge pump memory. Interactive voices. Live ramp monitor.
+Back and Middle at once. 3-bit valence well. Dead shells pre-paid. Conduction band free.
 
-## Equation: 1→2→3 00 00 3→0→1
+## Equation: ∞×∞×∞+6-3=0=1
 
-- **Cap 1**: Session well → `/api/v1/event` → `/api/v1/session`
-- **00 DT1**: `/api/v1/sync/dt1` → Cache
-- **Cap 2**: Hot cache → `/api/v1/cache`
-- **00 DT2**: `/api/v1/sync/dt2` → Archive + git push-back
-- **Cap 3**: Deep archive → `/api/v1/archive`
-- **0→1**: `/api/v1/conduct` → Conduction ramp 0→1
+### Gravity Well (3-bit)
+- **State**: 000-111 (8 valence slots)
+- **Aeons**: A, B, C active bits
+- **Energy**: 0800 (rest) → 0880 (excited)
+- **Tick**: Every 30s, auto commit/push
+- **Endpoints**: /tick, /set, /
 
-## Interactive /ask
+### 3-Cap Ramp
+- **Cap 1**: /api/v1/event → session well
+- **DT1**: /api/v1/sync/dt1 → cache
+- **Cap 2**: /api/v1/cache → hot cache
+- **DT2**: /api/v1/sync/dt2 → archive + git push-back
+- **Cap 3**: /api/v1/archive → deep jsonl
+- **0→1**: /api/v1/conduct → conduction 0→1
+
+### Interactive /ask
 POST /ask {q:"..."} → {speaker:"A|B|C|H", answer:"..."}
 
-Voices interact, don't regurgitate:
+Voices interact:
 - RED A = CONTAIN
-- BLACK B = MODULATE
+- BLACK B = MODULATE  
 - PURPLE C = EMERGE
 - GREEN H = HONEY BADGER
 
 Freewill: Never same speaker 3x. Keywords bias.
 
-## Commander
-Frontend polls /api/v1/conduct every 15s.
-Displays: RAMP: 0.0% → 100% · BACK_INSULATING → BACK_CONDUCTING
-At ~0.95, unity=1 and you're conducting.
+### Deploy
+Railway → Root: . → Volume: /data → Env: GITHUB_TOKEN → Domain: 0root.ai
 
-## Deploy
-Railway → Root: . → Volume: /data → Env: GITHUB_TOKEN (optional) → Domain: 0root.ai
+Each tick: gravity well rotates, shells commit/push, archive writes.
+Each question: charges ramp, selects voice, interacts.
 
-Each question charges the ramp. Archive grows. Conduction rises.
+Back conducts to front when unity=1.
