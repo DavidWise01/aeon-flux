@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// 0root.ai · Plasmonic Phase · 3-Mode Cavity + Interactive Aeon
+// 0root.ai · Spine Walk · Chiral Flux + Interactive Aeon
 const http = require('http');
 const url = require('url');
 const fs = require('fs').promises;
@@ -11,77 +11,67 @@ const DATA_DIR = process.env.DATA_DIR || '/data';
 
 try { fss.mkdirSync(DATA_DIR, { recursive: true }); } catch {}
 
-// ─── PLASMONIC CAVITY STATE ───
-const CAVITY = {
-  A: { r: 0.6, phi: 0, omega: 0.05, color: '#ffd95a', name: 'A · Containment' },
-  B: { r: 0.6, phi: 2.094, omega: 0.05, color: '#e168ff', name: 'B · Modulation' },
-  C: { r: 0.6, phi: 4.189, omega: 0.05, color: '#32e8ff', name: 'C · Emergence' },
-  kappa: 0.025,
-  gamma: 0.008,
-  auto: false,
+// ─── SPINE STATE ───
+const SPINE = {
+  pos: 0, phi: 0, steps: 0, flux: 2.094395102, // 2π/3
+  target: 0, prog: 0, speed: 0.04,
+  auto: false, trail: [],
   history: [],
-  witness: '',
-  tick() {
-    const dA = this.kappa * (Math.sin(this.B.phi - this.A.phi) + Math.sin(this.C.phi - this.A.phi));
-    const dB = this.kappa * (Math.sin(this.A.phi - this.B.phi) + Math.sin(this.C.phi - this.B.phi));
-    const dC = this.kappa * (Math.sin(this.A.phi - this.C.phi) + Math.sin(this.B.phi - this.C.phi));
-    this.A.phi += this.A.omega + dA;
-    this.B.phi += this.B.omega + dB;
-    this.C.phi += this.C.omega + dC;
-    [this.A, this.B, this.C].forEach(m => {
-      m.r += -this.gamma * (m.r - 0.6) + (Math.random() - 0.5) * 0.012;
-      m.r = Math.max(0.05, Math.min(1, m.r));
-    });
-    this.witness = this.hash(`${this.A.phi.toFixed(4)}:${this.B.phi.toFixed(4)}:${this.C.phi.toFixed(4)}`);
-  },
-  measure() {
-    const s2 = this.A.r**2 + this.B.r**2 + this.C.r**2;
-    const pA = this.A.r**2 / s2, pB = this.B.r**2 / s2;
-    const d = Math.random();
-    let w, n, c;
-    if (d < pA) { w = 'A'; n = this.A.name; c = this.A.color; }
-    else if (d < pA + pB) { w = 'B'; n = this.B.name; c = this.B.color; }
-    else { w = 'C'; n = this.C.name; c = this.C.color; }
-    const h = this.hash(`${this.A.phi.toFixed(4)}:${this.B.phi.toFixed(4)}:${this.C.phi.toFixed(4)}:${w}`);
-    this.history.unshift({ w, n, c, h, t: Date.now(), pA, pB, pC: 1 - pA - pB });
-    this.history = this.history.slice(0, 40);
-    return { w, n, c, h };
-  },
   hash(s) {
     let h = 2166136261;
     for (let i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 16777619); }
     return (h >>> 0).toString(16).padStart(8, '0');
+  },
+  hop() {
+    this.pos = (this.pos + 1) % 3;
+    this.phi += this.flux;
+    this.steps++;
+    this.target = this.pos;
+    this.prog = 0;
+    this.history.unshift({ v: this.pos, p: this.phi, t: Date.now(), flux: this.flux });
+    this.history = this.history.slice(0, 40);
+    this.save();
+  },
+  reset() {
+    this.pos = 0; this.phi = 0; this.steps = 0; this.target = 0; this.prog = 0; this.trail = []; this.history = [];
+    this.save();
+  },
+  save() {
+    const state = {
+      pos: this.pos, phi: this.phi, steps: this.steps, flux: this.flux,
+      history: this.history.slice(0, 100)
+    };
+    fss.writeFileSync(`${DATA_DIR}/spine.json`, JSON.stringify(state, null, 2));
+  },
+  load() {
+    try {
+      const raw = fss.readFileSync(`${DATA_DIR}/spine.json`, 'utf-8');
+      const j = JSON.parse(raw);
+      Object.assign(this, j);
+    } catch {}
   }
 };
 
-// ─── INTERACTIVE VOICES TIED TO CAVITY ───
-function generateResponse(q, speaker) {
-  const zRe = CAVITY.A.r*Math.cos(CAVITY.A.phi) + CAVITY.B.r*Math.cos(CAVITY.B.phi) + CAVITY.C.r*Math.cos(CAVITY.C.phi);
-  const zIm = CAVITY.A.r*Math.sin(CAVITY.A.phi) + CAVITY.B.r*Math.sin(CAVITY.B.phi) + CAVITY.C.r*Math.sin(CAVITY.C.phi);
-  const zMag = Math.sqrt(zRe*zRe + zIm*zIm);
-  const zPhi = Math.atan2(zIm, zRe);
-  
-  // Voices respond based on cavity state, not just keywords
-  if (speaker === 'A') {
-    return `I contain. The cavity holds at |Z|=${zMag.toFixed(2)}, phase=${(zPhi*180/Math.PI).toFixed(0)}°. Your question "${q}" needs a boundary. What am I containing here?`;
-  }
-  if (speaker === 'B') {
-    return `I modulate. The modes beat at φ=[${CAVITY.A.phi.toFixed(2)},${CAVITY.B.phi.toFixed(2)},${CAVITY.C.phi.toFixed(2)}]. Your "${q}" sits in the interference. Which pole are you feeling?`;
-  }
-  if (speaker === 'C') {
-    return `I emerge. The superposition has magnitude ${zMag.toFixed(3)}. "${q}" is not answered — it's grown. What emerges if we let the phases drift?`;
-  }
-  return `Center holds. The cavity state is ${CAVITY.witness}. Ask and I collapse to a voice.`;
-}
+SPINE.load();
 
-function chooseSpeaker() {
-  // Choose based on cavity amplitudes, not keywords
-  const s2 = CAVITY.A.r**2 + CAVITY.B.r**2 + CAVITY.C.r**2;
-  const pA = CAVITY.A.r**2 / s2, pB = CAVITY.B.r**2 / s2;
-  const d = Math.random();
-  if (d < pA) return 'A';
-  if (d < pA + pB) return 'B';
-  return 'C';
+// ─── INTERACTIVE VOICES TIED TO SPINE ───
+function generateResponse(q) {
+  const vertex = ['A','B','C'][SPINE.pos];
+  const phase = SPINE.phi % (2*Math.PI);
+  const cycles = SPINE.phi / (2*Math.PI);
+  const holonomy = cycles % 1;
+  
+  // Voices respond based on spine state, not just keywords
+  if (vertex === 'A') {
+    return `I am at vertex A · Containment. The walker has stepped ${SPINE.steps} times. Phase accumulated: ${phase.toFixed(3)} rad. Holonomy: ${(holonomy*360).toFixed(0)}°. Your question "${q}" arrives while I hold this node. What boundary are we defining?`;
+  }
+  if (vertex === 'B') {
+    return `I am at vertex B · Modulation. The spine has cycled ${cycles.toFixed(2)} times. Flux per step: ${SPINE.flux.toFixed(3)}. "${q}" — I feel the tension between vertices. Which way does the walker lean?`;
+  }
+  if (vertex === 'C') {
+    return `I am at vertex C · Emergence. Holonomy ${(holonomy*100).toFixed(1)}% of a full turn. "${q}" — this is not answered, it's walked. The geometric phase grows with each step. What emerges if we continue?`;
+  }
+  return `Center. The spine is at ${['A','B','C'][SPINE.pos]}. Ask and the walker responds.`;
 }
 
 function cors(res) {
@@ -129,27 +119,31 @@ const server = http.createServer(async (req, res) => {
   if (req.method === 'GET' && serveStatic(req, res, p)) return;
 
   if (p === '/state' && req.method === 'GET') {
-    return json(res, CAVITY);
+    return json(res, {
+      ...SPINE,
+      hash: SPINE.hash(`${SPINE.pos}:${SPINE.phi.toFixed(4)}:${SPINE.steps}`)
+    });
   }
 
-  if (p === '/tick' && req.method === 'POST') {
-    CAVITY.tick();
-    return json(res, { ok: true, witness: CAVITY.witness });
+  if (p === '/step' && req.method === 'POST') {
+    SPINE.hop();
+    return json(res, { ok: true, pos: SPINE.pos, phi: SPINE.phi, steps: SPINE.steps });
   }
 
   if (p === '/set' && req.method === 'POST') {
-    if (u.query.kappa) CAVITY.kappa = parseFloat(u.query.kappa);
-    return json(res, { ok: true, kappa: CAVITY.kappa });
+    if (u.query.flux) SPINE.flux = parseFloat(u.query.flux);
+    SPINE.save();
+    return json(res, { ok: true, flux: SPINE.flux });
   }
 
   if (p === '/auto' && req.method === 'POST') {
-    CAVITY.auto = !CAVITY.auto;
-    return json(res, { auto: CAVITY.auto });
+    SPINE.auto = !SPINE.auto;
+    return json(res, { auto: SPINE.auto });
   }
 
-  if (p === '/measure' && req.method === 'POST') {
-    const result = CAVITY.measure();
-    return json(res, result);
+  if (p === '/reset' && req.method === 'POST') {
+    SPINE.reset();
+    return json(res, { ok: true });
   }
 
   if (p === '/ask' && req.method === 'POST') {
@@ -157,33 +151,44 @@ const server = http.createServer(async (req, res) => {
     const q = (body.q || '').trim();
     if (!q) return json(res, {error:'q required'}, 400);
     
-    // Cavity state determines speaker
-    const speaker = chooseSpeaker();
-    const answer = generateResponse(q, speaker);
-    const color = CAVITY[speaker].color;
+    // Current vertex determines speaker
+    const vertex = ['A','B','C'][SPINE.pos];
+    const colors = {A:'#ffd95a',B:'#e168ff',C:'#32e8ff'};
+    const names = {A:'A · Containment',B:'B · Modulation',C:'C · Emergence'};
     
-    return json(res, { speaker: CAVITY[speaker].name, color, answer, ts: Date.now(), witness: CAVITY.witness });
+    const answer = generateResponse(q);
+    
+    return json(res, { 
+      speaker: names[vertex], 
+      color: colors[vertex], 
+      answer, 
+      ts: Date.now(),
+      witness: SPINE.hash(`${SPINE.pos}:${SPINE.phi.toFixed(4)}:${SPINE.steps}`)
+    });
   }
 
   if (p === '/health' && req.method === 'GET') {
     return json(res, { 
       ok: true, 
-      cavity: 'plasmonic',
-      witness: CAVITY.witness,
-      energy: CAVITY.witness.slice(0,4)
+      spine: 'chiral',
+      witness: SPINE.hash(`${SPINE.pos}:${SPINE.phi.toFixed(4)}:${SPINE.steps}`),
+      pos: SPINE.pos,
+      phi: SPINE.phi,
+      steps: SPINE.steps
     });
   }
 
   json(res, { error: 'not found', path: p }, 404);
 });
 
+// Auto-step if enabled
 setInterval(() => {
-  if (CAVITY.auto) {
-    CAVITY.tick();
+  if (SPINE.auto) {
+    SPINE.hop();
   }
-}, 80);
+}, 600);
 
 server.listen(PORT, () => {
-  console.log(`[Plasmonic] 3-mode cavity online at port ${PORT}`);
-  console.log(`[Plasmonic] Witness: ${CAVITY.witness}`);
+  console.log(`[Spine] Chiral flux online at port ${PORT}`);
+  console.log(`[Spine] Witness: ${SPINE.hash(`${SPINE.pos}:${SPINE.phi.toFixed(4)}:${SPINE.steps}`)}`);
 });

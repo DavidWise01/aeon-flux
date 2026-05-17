@@ -3,182 +3,180 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>0root.ai — Plasmonic Phase Cavity</title>
+<title>0root.ai — Spine Walk · Chiral Flux</title>
 <style>
 :root{--bg:#020308;--ink:#d8e8e0;--gold:#ffd95a;--mag:#e168ff;--cyan:#32e8ff;--mint:#00ffaa;--panel:rgba(0,0,0,.6);--border:rgba(0,255,170,.18)}
 *{box-sizing:border-box}html,body{margin:0;height:100%;background:#000;color:var(--ink);font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;overflow:hidden}
-body{background:radial-gradient(circle at 50% 45%,rgba(0,255,170,.06),transparent 28%),linear-gradient(var(--border) 1px,transparent 1px),linear-gradient(90deg,var(--border) 1px,transparent 1px),var(--bg);background-size:100% 100%,30px 30px,30px 30px}
+body{background:radial-gradient(circle at 50% 42%,rgba(0,255,170,.06),transparent 28%),linear-gradient(var(--border) 1px,transparent 1px),linear-gradient(90deg,var(--border) 1px,transparent 1px),var(--bg);background-size:100% 100%,30px 30px,30px 30px}
 canvas{position:fixed;inset:0}
 .ui{position:fixed;inset:0;padding:18px;display:grid;grid-template-rows:auto 1fr auto;gap:12px;pointer-events:none}
 .panel{pointer-events:auto;border:1px solid var(--border);background:var(--panel);backdrop-filter:blur(8px);border-radius:14px;padding:14px}
-header{display:flex;align-items:center;gap:12px}
 h1{margin:0;font-size:15px;letter-spacing:.14em;color:var(--mint);font-weight:400}
 .row{display:flex;gap:10px;align-items:center}
 button{background:transparent;border:1px solid var(--border);color:var(--ink);padding:8px 14px;border-radius:8px;cursor:pointer;font:inherit;text-transform:uppercase;font-size:11px}
 button:hover{box-shadow:0 0 12px rgba(0,255,170,.2)}
-.meter{display:grid;grid-template-columns:70px 1fr 60px;gap:8px;align-items:center;font-size:12px;margin:6px 0}
+.meter{display:grid;grid-template-columns:90px 1fr 55px;gap:8px;align-items:center;font-size:12px;margin:6px 0}
 .track{height:6px;border:1px solid rgba(255,255,255,.12);background:#020712;border-radius:999px;overflow:hidden}
-.fill{height:100%;transition:width .2s}
-.log{height:130px;overflow:auto;font-size:11px;line-height:1.5;color:#a6c8bc;white-space:pre-wrap}
-.footer{display:flex;justify-content:space-between;align-items:center;font-size:11px;color:#5a7a6f}
+.fill{height:100%}
 .val{color:var(--gold)}
+.footer{display:flex;justify-content:space-between;align-items:center;font-size:11px;color:#5a7a6f}
 .inputrow{display:flex;gap:10px;margin-top:10px}
 .inputrow input{flex:1;background:#020712;border:1px solid var(--border);color:var(--ink);padding:8px 10px;border-radius:8px;font:inherit;font-size:12px}
-@media(max-width:700px){.side{position:fixed;bottom:12px;left:12px;right:12px;width:auto}}
 </style>
 </head>
 <body>
 <canvas id="cv"></canvas>
 <div class="ui">
-  <header class="panel"><h1>PLASMONIC PHASE · 3-MODE CAVITY</h1><div style="margin-left:auto;font-size:11px;color:#7aa89a" id="status">REST</div></header>
+  <div class="panel" style="display:flex;align-items:center;gap:12px">
+    <h1>SPINE WALK · Φ = 2π/3</h1>
+    <div style="margin-left:auto;font-size:11px;color:#7aa89a" id="status">REST</div>
+  </div>
   <div style="display:grid;grid-template-columns:260px 1fr 260px;gap:12px">
-    <div class="panel side" style="display:flex;flex-direction:column;gap:10px">
-      <div style="font-size:12px;color:var(--mint);text-transform:uppercase;letter-spacing:.1em">Coupling</div>
-      <input type="range" id="kappa" min="0" max="0.12" step="0.001" value="0.025" style="width:100%">
-      <div class="row"><button id="tick">Tick</button><button id="auto">Auto</button><button id="measure">Measure</button></div>
+    <div class="panel" style="display:flex;flex-direction:column;gap:10px">
+      <div style="font-size:12px;color:var(--mint);text-transform:uppercase;letter-spacing:.1em">Flux</div>
+      <input type="range" id="flux" min="0" max="6.284" step="0.001" value="2.094" style="width:100%">
+      <div class="row"><button id="step">Step (+1)</button><button id="auto">Auto</button><button id="reset">Rest</button></div>
       <div class="inputrow">
-        <input id="q" placeholder="Ask the cavity…" autocomplete="off">
+        <input id="q" placeholder="Ask the spine…" autocomplete="off">
         <button id="ask">Ask</button>
       </div>
-      <div style="font-size:12px;color:var(--mint);text-transform:uppercase;letter-spacing:.1em;margin-top:8px">Superposition</div>
-      <div id="super" style="font-size:13px;line-height:1.6"></div>
-      <div style="font-size:12px;color:var(--mint);text-transform:uppercase;letter-spacing:.1em;margin-top:8px">Witness Log</div>
-      <div class="log" id="log">waiting for measurement…</div>
+      <div style="font-size:12px;color:var(--mint);text-transform:uppercase;letter-spacing:.1em;margin-top:8px">Walker State</div>
+      <div id="walker" style="font-size:13px;line-height:1.6"></div>
+      <div style="font-size:12px;color:var(--mint);text-transform:uppercase;letter-spacing:.1em;margin-top:8px">Geometric Phase</div>
+      <div id="geo" style="font-size:13px;line-height:1.6"></div>
     </div>
     <div></div>
-    <div class="panel side" style="display:flex;flex-direction:column;gap:6px">
-      <div style="font-size:12px;color:var(--mint);text-transform:uppercase;letter-spacing:.1em">Mode Register</div>
-      <div id="modes"></div>
+    <div class="panel" style="display:flex;flex-direction:column;gap:6px">
+      <div style="font-size:12px;color:var(--mint);text-transform:uppercase;letter-spacing:.1em;margin-bottom:4px">Spine History</div>
+      <div id="hist" style="font-size:11px;line-height:1.5;color:#a6c8bc;max-height:300px;overflow:auto"></div>
       <div style="font-size:12px;color:var(--mint);text-transform:uppercase;letter-spacing:.1em;margin-top:8px">Last Voice</div>
       <div id="voice" style="font-size:11px;color:#a6c8bc">—</div>
     </div>
   </div>
-  <div class="panel footer"><span id="hash">WITNESS --------</span><span>|Z| <span class="val" id="zmag">0.00</span> · φ <span class="val" id="zphi">0°</span></span></div>
+  <div class="panel footer"><span id="hash">WITNESS --------</span><span>holonomy <span class="val" id="hol">0.000</span> · cycles <span class="val" id="cyc">0</span></span></div>
 </div>
 
 <script>
 const cv=document.getElementById('cv'),ctx=cv.getContext('2d');
 function resize(){cv.width=innerWidth*devicePixelRatio;cv.height=innerHeight*devicePixelRatio;ctx.setTransform(devicePixelRatio,0,0,devicePixelRatio,0,0)} addEventListener('resize',resize);resize();
 
-const hex=(h)=>{const v=parseInt(h.slice(1),16);return[(v>>16)&255,(v>>8)&255,v&255]};
-const rgb=(r,g,b,a)=>`rgba(${r|0},${g|0},${b|0},${a})`;
+const V={A:'#ffd95a',B:'#e168ff',C:'#32e8ff',D:'#00ffaa'};
+const names={0:'A · Containment',1:'B · Modulation',2:'C · Emergence'};
 
-let CAVITY={A:{r:0.6,phi:0,color:'#ffd95a',name:'A · Containment'},B:{r:0.6,phi:2.094,color:'#e168ff',name:'B · Modulation'},C:{r:0.6,phi:4.189,color:'#32e8ff',name:'C · Emergence'},kappa:0.025,history:[]};
+let SPINE={pos:0,phi:0,steps:0,flux:2.094395102,target:0,prog:0,speed:0.04,auto:false,trail:[],history:[]};
 
 async function fetchState(){
   try{
-    const r = await fetch('/state');
-    const j = await r.json();
-    CAVITY = j;
+    const r=await fetch('/state');
+    const j=await r.json();
+    SPINE={...SPINE,...j};
     ui();
   }catch(e){}
 }
 
 function vtx(W,H){
-  const pad=Math.min(W,H)*0.12;
-  return{A:[W*0.5,pad+40],B:[pad,H*0.78],C:[W-pad,H*0.78],D:[W*0.5,H*0.48]};
+  const m=Math.min(W,H),p=m*0.14;
+  return{A:[W*0.5,p+36],B:[p,H*0.78],C:[W-p,H*0.78],D:[W*0.5,H*0.48]};
 }
 
 function draw(){
-  const W=innerWidth,H=innerHeight;
-  ctx.fillStyle='rgba(2,3,8,0.22)';ctx.fillRect(0,0,W,H);
+  const W=innerWidth,H=innerHeight,t=Date.now()*0.001;
+  ctx.fillStyle='rgba(2,3,8,0.35)';ctx.fillRect(0,0,W,H);
   const v=vtx(W,H);
 
-  ctx.save();ctx.globalAlpha=0.25;
-  ctx.strokeStyle='#00ffaa';ctx.lineWidth=2;ctx.setLineDash([8,6]);
+  [0,1,2].forEach(i=>{
+    const lab=['A','B','C'][i],pos=[v.A,v.B,v.C][i],col=[V.A,V.B,V.C][i];
+    const [R,G,B]=[parseInt(col.slice(1,3),16),parseInt(col.slice(3,5),16),parseInt(col.slice(5,7),16)];
+    const g=ctx.createRadialGradient(pos[0],pos[1],0,pos[0],pos[1],180);
+    g.addColorStop(0,`rgba(${R},${G},${B},0.18)`);g.addColorStop(1,`rgba(${R},${G},${B},0)`);
+    ctx.fillStyle=g;ctx.beginPath();ctx.arc(pos[0],pos[1],180,0,Math.PI*2);ctx.fill();
+    ctx.save();ctx.fillStyle=col;ctx.shadowColor=col;ctx.shadowBlur=24;
+    ctx.beginPath();ctx.arc(pos[0],pos[1],12,0,Math.PI*2);ctx.fill();ctx.restore();
+    ctx.fillStyle=col;ctx.font='13px monospace';ctx.textAlign='center';
+    ctx.fillText(lab,pos[0],pos[1]-28);
+  });
+
+  ctx.save();ctx.globalAlpha=0.2+0.15*Math.sin(t*2);
+  ctx.strokeStyle=V.D;ctx.lineWidth=2;ctx.setLineDash([10,8]);
   ctx.beginPath();ctx.moveTo(...v.A);ctx.lineTo(...v.B);ctx.lineTo(...v.C);ctx.closePath();ctx.stroke();
   ctx.setLineDash([]);ctx.restore();
 
-  ctx.globalCompositeOperation='lighter';
-  [CAVITY.A,CAVITY.B,CAVITY.C].forEach((m,i)=>{
-    const pos=[v.A,v.B,v.C][i];
-    const [R,G,B]=hex(m.color);
-    const rad=220+140*m.r;
-    const g=ctx.createRadialGradient(pos[0],pos[1],0,pos[0],pos[1],rad);
-    const a=m.r*m.r*0.28;
-    g.addColorStop(0,rgb(R,G,B,a));
-    g.addColorStop(0.6,rgb(R,G,B,a*0.4));
-    g.addColorStop(1,rgb(R,G,B,0));
-    ctx.fillStyle=g;ctx.beginPath();ctx.arc(pos[0],pos[1],rad,0,Math.PI*2);ctx.fill();
-  });
-  ctx.globalCompositeOperation='source-over';
+  const src=[v.A,v.B,v.C][(SPINE.target+2)%3];
+  const dst=[v.A,v.B,v.C][SPINE.target];
+  const wx=src[0]+(dst[0]-src[0])*SPINE.prog;
+  const wy=src[1]+(dst[1]-src[1])*SPINE.prog;
+  SPINE.prog=Math.min(1,SPINE.prog+SPINE.speed);
 
-  [CAVITY.A,CAVITY.B,CAVITY.C].forEach((m,i)=>{
-    const pos=[v.A,v.B,v.C][i];
-    const [R,G,B]=hex(m.color);
-    ctx.save();
-    ctx.shadowColor=m.color;ctx.shadowBlur=18+30*m.r;
-    ctx.fillStyle=rgb(R,G,B,0.45+0.35*m.r);
-    ctx.beginPath();ctx.arc(pos[0],pos[1],14+18*m.r,0,Math.PI*2);ctx.fill();
-    ctx.restore();
-    const hx=Math.cos(m.phi)*18,hy=Math.sin(m.phi)*18;
-    ctx.save();ctx.strokeStyle='#fff';ctx.lineWidth=2;ctx.globalAlpha=0.9;
-    ctx.beginPath();ctx.moveTo(pos[0],pos[1]);ctx.lineTo(pos[0]+hx,pos[1]+hy);ctx.stroke();
-    ctx.restore();
-    ctx.fillStyle=m.color;ctx.font='13px monospace';ctx.textAlign='center';
-    ctx.fillText(m.name.split('·')[0],pos[0],pos[1]-30);
+  SPINE.trail.push({x:wx,y:wy,a:1});
+  if(SPINE.trail.length>60)SPINE.trail.shift();
+  SPINE.trail.forEach((p,i)=>{
+    p.a-=0.016;
+    if(p.a<=0)return;
+    ctx.save();ctx.globalAlpha=p.a*0.6;
+    ctx.fillStyle=V.D;ctx.beginPath();ctx.arc(p.x,p.y,3,0,Math.PI*2);ctx.fill();ctx.restore();
   });
+  SPINE.trail=SPINE.trail.filter(p=>p.a>0);
 
-  const zRe=CAVITY.A.r*Math.cos(CAVITY.A.phi)+CAVITY.B.r*Math.cos(CAVITY.B.phi)+CAVITY.C.r*Math.cos(CAVITY.C.phi);
-  const zIm=CAVITY.A.r*Math.sin(CAVITY.A.phi)+CAVITY.B.r*Math.sin(CAVITY.B.phi)+CAVITY.C.r*Math.sin(CAVITY.C.phi);
-  const zMag=Math.sqrt(zRe*zRe+zIm*zIm),zPhi=Math.atan2(zIm,zRe);
-  const zNorm=Math.min(1,zMag/2.2);
-  const hu=((zPhi+Math.PI)/(2*Math.PI)*360+180)%360;
-  ctx.save();ctx.globalAlpha=0.6+0.4*zNorm;
-  ctx.shadowColor=`hsl(${hu},90%,60%)`;ctx.shadowBlur=24+40*zNorm;
-  ctx.fillStyle=`hsl(${hu},90%,${50+40*zNorm}%)`;
-  ctx.beginPath();ctx.arc(v.D[0],v.D[1],8+22*zNorm,0,Math.PI*2);ctx.fill();
+  const wcol=[V.A,V.B,V.C][SPINE.pos];
+  ctx.save();ctx.fillStyle=wcol;ctx.shadowColor=wcol;ctx.shadowBlur=28;
+  ctx.beginPath();ctx.arc(wx,wy,10,0,Math.PI*2);ctx.fill();ctx.restore();
+
+  const pr=24+8*Math.sin(t*4);
+  ctx.save();ctx.strokeStyle='#ffffff';ctx.globalAlpha=0.9;ctx.lineWidth=2;
+  ctx.setLineDash([4,4]);ctx.beginPath();ctx.arc(wx,wy,pr,0,Math.PI*2);ctx.stroke();ctx.setLineDash([]);
+  const ph=SPINE.phi+t*0.5;
+  ctx.beginPath();ctx.moveTo(wx,wy);ctx.lineTo(wx+Math.cos(ph)*pr,wy+Math.sin(ph)*pr);ctx.stroke();
   ctx.restore();
-  ctx.save();ctx.strokeStyle=`hsl(${hu},80%,70%)`;ctx.globalAlpha=0.15;
-  for(let rad=30;rad<90;rad+=18){ctx.beginPath();ctx.arc(v.D[0],v.D[1],rad+Math.sin(Date.now()*0.002+rad)*3,0,Math.PI*2);ctx.stroke();}
+
+  const cyc=SPINE.phi/(2*Math.PI);
+  const holo=cyc%1;
+  const ch=Math.cos(2*Math.PI*holo),sh=Math.sin(2*Math.PI*holo);
+  const ca=0.5+0.5*ch;
+  ctx.save();
+  ctx.fillStyle=`rgba(0,255,170,${0.35+0.25*ca})`;
+  ctx.shadowColor=V.D;ctx.shadowBlur=20+30*ca;
+  ctx.beginPath();ctx.arc(v.D[0],v.D[1],6+14*ca,0,Math.PI*2);ctx.fill();
+  ctx.strokeStyle=`hsl(${holo*360},90%,70%)`;ctx.globalAlpha=0.4+0.3*Math.abs(sh);
+  ctx.beginPath();ctx.arc(v.D[0],v.D[1],40+Math.sin(t*3)*4,0,Math.PI*2);ctx.stroke();
   ctx.restore();
 
   ctx.fillStyle='#7aa89a';ctx.font='12px monospace';ctx.textAlign='left';
-  ctx.fillText(`κ=${CAVITY.kappa.toFixed(3)}`,20,H-20);
+  ctx.fillText(`spine pos: ${['A','B','C'][SPINE.pos]}  phase: ${(SPINE.phi%(2*Math.PI)).toFixed(3)} rad  flux/step: ${SPINE.flux.toFixed(3)}`,20,H-20);
 
   requestAnimationFrame(draw);
 }
 
 function ui(){
-  const box=document.getElementById('modes');
-  let h='';
-  ['A','B','C'].forEach(k=>{
-    const m=CAVITY[k];
-    const pct=(m.r*100).toFixed(0);
-    const deg=((m.phi*180/Math.PI)%360).toFixed(0);
-    h+=`<div class="meter"><span style="color:${m.color}">${k}</span><div class="track"><div class="fill" style="width:${pct}%;background:${m.color}"></div></div><span>${deg}°</span></div>`;
-  });
-  box.innerHTML=h;
-  const zRe=CAVITY.A.r*Math.cos(CAVITY.A.phi)+CAVITY.B.r*Math.cos(CAVITY.B.phi)+CAVITY.C.r*Math.cos(CAVITY.C.phi);
-  const zIm=CAVITY.A.r*Math.sin(CAVITY.A.phi)+CAVITY.B.r*Math.sin(CAVITY.B.phi)+CAVITY.C.r*Math.sin(CAVITY.C.phi);
-  const zMag=Math.sqrt(zRe*zRe+zIm*zIm),zPhi=Math.atan2(zIm,zRe);
-  document.getElementById('zmag').textContent=zMag.toFixed(2);
-  document.getElementById('zphi').textContent=((zPhi*180/Math.PI)%360).toFixed(0)+'°';
-  document.getElementById('super').innerHTML=`|Z| = ${zMag.toFixed(3)}<br>arg(Z) = ${zPhi.toFixed(3)} rad<br>Re = ${zRe.toFixed(3)}<br>Im = ${zIm.toFixed(3)}`;
-  document.getElementById('hash').textContent='WITNESS '+(CAVITY.witness||'--------');
-  const log=document.getElementById('log');
-  if(CAVITY.history&&CAVITY.history.length)log.innerHTML=CAVITY.history.slice(0,8).map(e=>`<div style="border-left:2px solid ${e.c};padding-left:6px;margin-bottom:4px"><span style="color:${e.c}">${e.w}</span> · ${e.h.slice(0,8)} · p=${(e.pA*100).toFixed(0)}:${(e.pB*100).toFixed(0)}:${(e.pC*100).toFixed(0)}</div>`).join('');
+  const w=document.getElementById('walker');
+  w.innerHTML=`Vertex: <span style="color:${[V.A,V.B,V.C][SPINE.pos]}">${names[SPINE.pos]}</span><br>Step: ${SPINE.steps}<br>Phase: ${(SPINE.phi%(2*Math.PI)).toFixed(3)} rad`;
+  const g=document.getElementById('geo');
+  const cyc=SPINE.phi/(2*Math.PI);
+  const holo=cyc%1;
+  g.innerHTML=`Total cycles: ${cyc.toFixed(3)}<br>Holonomy: ${holo.toFixed(3)}<br>Equiv: ${(holo*360).toFixed(0)}°`;
+  document.getElementById('hol').textContent=holo.toFixed(3);
+  document.getElementById('cyc').textContent=Math.floor(cyc);
+  const h=document.getElementById('hist');
+  if(SPINE.history&&SPINE.history.length)h.innerHTML=SPINE.history.slice(0,12).map((e,i)=>`<div style="border-left:2px solid ${[V.A,V.B,V.C][e.v]};padding-left:6px;margin-bottom:3px"><span style="color:${[V.A,V.B,V.C][e.v]}">${['A','B','C'][e.v]}</span> · ${(e.p%(2*Math.PI)).toFixed(2)} rad · ${new Date(e.t).toLocaleTimeString().split(' ')[0]}</div>`).join('');
+  document.getElementById('hash').textContent='WITNESS '+SPINE.hash;
+  document.getElementById('flux').value=SPINE.flux;
 }
 
-document.getElementById('kappa').oninput=async e=>{
-  const k=parseFloat(e.target.value);
-  await fetch('/set?kappa='+k,{method:'POST'});
+document.getElementById('flux').oninput=async e=>{
+  const f=parseFloat(e.target.value);
+  await fetch('/set?flux='+f,{method:'POST'});
   fetchState();
 };
-document.getElementById('tick').onclick=async ()=>{
-  await fetch('/tick',{method:'POST'});
+document.getElementById('step').onclick=async ()=>{
+  await fetch('/step',{method:'POST'});
   fetchState();
 };
 document.getElementById('auto').onclick=async e=>{
-  await fetch('/auto',{method:'POST'});
-  const r=await fetch('/state');const j=await r.json();
+  const r=await fetch('/auto',{method:'POST'});
+  const j=await r.json();
   e.target.textContent=j.auto?'Pause':'Auto';
 };
-document.getElementById('measure').onclick=async ()=>{
-  const r=await fetch('/measure',{method:'POST'});
-  const j=await r.json();
-  document.getElementById('status').innerHTML=`COLLAPSED <span style="color:${j.c}">${j.w}</span>`;
-  setTimeout(()=>document.getElementById('status').textContent='SUPERPOSITION',1200);
+document.getElementById('reset').onclick=async ()=>{
+  await fetch('/reset',{method:'POST'});
   fetchState();
 };
 document.getElementById('ask').onclick=async ()=>{

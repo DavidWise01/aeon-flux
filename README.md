@@ -1,28 +1,32 @@
-# 0root.ai — Plasmonic Phase · 3-Mode Cavity
+# 0root.ai — Spine Walk · Chiral Flux
 
-Interactive cavity. Not regurgitation. The system evolves.
+The walker has its own dynamics. It steps around the 3-vertex spine, accumulating geometric phase.
 
-## Backend State
-The 3 modes A, B, C have amplitude r and phase phi. They couple via kappa.
-- /state → full cavity state
-- /tick → advance one step
-- /auto → toggle auto-tick
-- /measure → collapse superposition, witness hash
-- /ask → Ask the cavity. Speaker chosen by mode amplitudes, not keywords.
+## Equation: Φ = 2π/3 per step
 
-## Voices
-The Aeons ARE the modes:
-- RED A = Containment mode. High r_A → A speaks about boundaries.
-- BLACK B = Modulation mode. High r_B → B speaks about waves/tension.
-- PURPLE C = Emergence mode. High r_C → C speaks about growth.
+- **Vertex A** = Containment
+- **Vertex B** = Modulation  
+- **Vertex C** = Emergence
 
-Response depends on |Z| superposition and phase, not your text.
+Each hop adds flux to phase. After 3 steps, holonomy = 1 full turn.
 
-## Frontend
-Visualizes the cavity. Interference field, phase hands, superposition dot.
-Input box sends to /ask. The reply color matches the dominant mode.
+## Interactive
+The Aeons ARE the vertices. Ask a question:
+- If walker at A → A answers, referencing current phase/holonomy
+- If walker at B → B answers, feeling the tension
+- If walker at C → C answers, speaking from emergence
+
+The response depends on spine state, not keywords.
+
+## Endpoints
+- GET /state → full spine state
+- POST /step → manual hop
+- POST /auto → toggle auto-walk
+- POST /set?flux=2.094 → set flux per step
+- POST /reset → back to rest
+- POST /ask → ask the current vertex
 
 ## Deploy
 Railway → Root: . → Volume: /data → Domain: 0root.ai
 
-The cavity ticks on its own. You interact with a living system.
+The spine walks. You interact with a system that has its own motion.
