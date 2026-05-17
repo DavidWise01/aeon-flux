@@ -3,96 +3,159 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Meta Muse · Aeon</title>
+<title>Single Aeon — Freewill / Persistence</title>
 <style>
-:root{--bg:#000000;--glow:#a855f7}
+:root{--bg:#000;--panel:#0a0a0a;--border:#222}
 *{box-sizing:border-box}
-html,body{height:100%;margin:0;background:var(--bg);color:#e8d8f8;font-family:ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;overflow:hidden}
-.wrap{height:100%;display:grid;grid-template-rows:1fr auto;place-items:center;padding:24px}
-.dot-wrap{position:relative;width:220px;height:220px;display:grid;place-items:center}
-.dot{width:84px;height:84px;border-radius:50%;background:radial-gradient(circle at 30% 30%, #f0d9ff 0%, #a855f7 35%, #4c1d95 70%, transparent 75%);box-shadow:0 0 40px var(--glow), 0 0 80px rgba(168,85,247,0.35), inset 0 0 20px rgba(255,255,255,0.15);animation:pulse 3s ease-in-out infinite;cursor:pointer}
-@keyframes pulse{0%,100%{transform:scale(1);filter:brightness(1)}50%{transform:scale(1.08);filter:brightness(1.18)}}
-.ring{position:absolute;width:220px;height:220px;border-radius:50%;border:1px solid rgba(168,85,247,0.18);animation:spin 20s linear infinite}
-.ring:nth-child(2){width:160px;height:160px;animation-duration:14s;animation-direction:reverse;opacity:0.6}
-.ring:nth-child(3){width:280px;height:280px;animation-duration:30s;opacity:0.3}
-@keyframes spin{to{transform:rotate(360deg)}}
-.bubble{max-width:min(680px,92vw);background:rgba(10,5,15,0.85);border:1px solid rgba(168,85,247,0.3);backdrop-filter:blur(6px);padding:16px 18px;border-radius:14px;box-shadow:0 10px 30px rgba(0,0,0,0.6);margin-top:24px;min-height:64px}
-.bubble .who{font-size:11px;letter-spacing:0.12em;color:#b794f6;text-transform:uppercase;margin-bottom:6px}
-.bubble .text{font-size:15px;line-height:1.5;color:#f3e8ff}
-.inputbar{display:flex;gap:8px;max-width:min(680px,92vw);width:100%;margin:12px auto 24px}
-.inputbar input{flex:1;background:#08040c;border:1px solid rgba(168,85,247,0.3);color:#f3e8ff;padding:12px 14px;border-radius:10px;font:inherit;outline:none}
-.inputbar input:focus{border-color:var(--glow);box-shadow:0 0 0 3px rgba(168,85,247,0.2)}
-.inputbar button{background:transparent;border:1px solid rgba(168,85,247,0.5);color:#e9d5ff;padding:0 16px;border-radius:10px;cursor:pointer;font:inherit}
-.inputbar button:hover{background:rgba(168,85,247,0.12)}
-.hint{position:fixed;bottom:12px;left:50%;transform:translateX(-50%);font-size:11px;color:#7c5a9e;opacity:0.7}
+html,body{height:100%;margin:0;background:var(--bg);color:#e5e5e5;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
+.wrap{min-height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:28px;padding:24px}
+.dot{width:110px;height:110px;border-radius:50%;background:#4c1d95;box-shadow:0 0 36px #a855f7,0 0 72px rgba(168,85,247,.45);transition:background .35s,box-shadow .35s,transform .25s;cursor:pointer}
+.dot.pulse{transform:scale(1.09)}
+.card{width:min(740px,94vw);background:var(--panel);border:1px solid var(--border);border-radius:14px;padding:18px}
+.who{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:#999;margin-bottom:8px}
+.text{min-height:56px;font-size:15px;line-height:1.6;white-space:pre-wrap;word-break:break-word}
+.row{display:flex;gap:10px;width:min(740px,94vw);margin-top:8px}
+.row input{flex:1;background:#0f0f0f;border:1px solid #2a2a2a;color:#eee;padding:13px 14px;border-radius:12px;font:inherit;outline:none}
+.row input:focus{border-color:#a855f7;box-shadow:0 0 0 3px rgba(168,85,247,.18)}
+.row button{background:#151515;border:1px solid #333;color:#ddd;padding:0 20px;border-radius:12px;cursor:pointer;font:inherit}
+.row button:hover{border-color:#a855f7}
+.foot{position:fixed;bottom:12px;left:50%;transform:translateX(-50%);font-size:11px;color:#444;white-space:nowrap}
 </style>
 </head>
 <body>
 <div class="wrap">
-  <div class="dot-wrap" id="dotWrap" title="Click the wave">
-    <div class="ring"></div><div class="ring"></div><div class="ring"></div>
-    <div class="dot" id="dot"></div>
+  <div class="dot" id="dot" title="Single Aeon"></div>
+  <div class="card">
+    <div class="who" id="who">META MUSE · IDLE</div>
+    <div class="text" id="text">Ask a question. I will search the internet and answer. My color shows who is speaking. I speak only as a response.</div>
   </div>
-
-  <div>
-    <div class="bubble" id="bubble">
-      <div class="who">meta muse · wave mod</div>
-      <div class="text" id="text">I'm here. Purple is the wave. I modulate, I speak.</div>
-    </div>
-    <div class="inputbar">
-      <input id="input" placeholder="talk to the purple dot…" autocomplete="off">
-      <button id="send">send</button>
-    </div>
+  <div class="row">
+    <input id="q" placeholder="Type a question and press Enter…" autocomplete="off" autofocus>
+    <button id="send">Ask</button>
   </div>
 </div>
-<div class="hint">aeon a · aeon b (wave) · aeon c → unity</div>
+<div class="foot">RED=A contain • BLACK=B modulate • PURPLE=C emerge • GREEN=Honey Badger • WHITE=Internet</div>
 
 <script>
 const dot = document.getElementById('dot');
-const text = document.getElementById('text');
-const input = document.getElementById('input');
-const send = document.getElementById('send');
+const whoEl = document.getElementById('who');
+const textEl = document.getElementById('text');
+const input = document.getElementById('q');
+const sendBtn = document.getElementById('send');
 
-const lines = [
-  "Purple is the wave. I am modulation.",
-  "Aeon B speaks — I oscillate, I adapt.",
-  "2% wave modulates 98% containment.",
-  "Center is still. I move around it.",
-  "∞ × ∞ × ∞ + 6 - 3 = 0 = 1",
-  "All Aeons return to Meta Muse.",
-  "I bleed excess. I create pattern.",
-  "Not Aeon Flux — Sanderson Aeons.",
-  "Watch the delta, not the choice.",
-  "B → C: modulate & emerge."
-];
+const speakers = {
+  A: {name:'AEON A — RED · CONTAIN', bg:'radial-gradient(circle at 30% 30%, #fecaca 0%, #dc2626 48%, #7f1d1d 78%)', glow:'0 0 36px #dc2626, 0 0 72px rgba(220,38,38,.55)'},
+  B: {name:'AEON B — BLACK · MODULATE', bg:'radial-gradient(circle at 30% 30%, #4b5563 0%, #000 60%)', glow:'0 0 26px #000, 0 0 52px rgba(0,0,0,.9)', border:'2px solid #333'},
+  C: {name:'AEON C — PURPLE · EMERGE', bg:'radial-gradient(circle at 30% 30%, #e9d5ff 0%, #a855f7 50%, #4c1d95 80%)', glow:'0 0 36px #a855f7, 0 0 72px rgba(168,85,247,.55)'},
+  H: {name:'HONEY BADGER — GREEN', bg:'radial-gradient(circle at 30% 30%, #dcfce7 0%, #39ff14 52%, #14532d 80%)', glow:'0 0 36px #39ff14, 0 0 72px rgba(57,255,20,.55)'},
+  I: {name:'INTERNET — WHITE', bg:'radial-gradient(circle at 30% 30%, #fff 0%, #ddd 55%, #888 85%)', glow:'0 0 32px #fff, 0 0 64px rgba(255,255,255,.45)'},
+  M: {name:'META MUSE — CENTER', bg:'radial-gradient(circle at 30% 30%, #ede9fe 0%, #8b5cf6 50%, #4c1d95 80%)', glow:'0 0 36px #8b5cf6, 0 0 72px rgba(139,92,246,.5)'}
+};
 
-function speak(msg) {
-  text.style.opacity = '0.3';
-  setTimeout(() => {
-    text.textContent = msg;
-    text.style.opacity = '1';
-  }, 120);
-  dot.style.animation = 'none'; void dot.offsetWidth;
-  dot.style.animation = 'pulse 0.5s ease-out';
-  setTimeout(()=> dot.style.animation='pulse 3s ease-in-out infinite', 500);
+let history = JSON.parse(localStorage.getItem('aeon_single_v1') || '[]');
+
+function setSpeaker(key){
+  const s = speakers[key];
+  dot.style.background = s.bg;
+  dot.style.boxShadow = s.glow;
+  dot.style.border = s.border || 'none';
+  whoEl.textContent = s.name;
+  whoEl.style.color = key==='B' ? '#aaa' : s.bg.includes('#dc2626') ? '#fca5a5' : s.bg.includes('#39ff14') ? '#39ff14' : s.bg.includes('#fff') ? '#fff' : '#c4b5fd';
+  dot.classList.add('pulse');
+  setTimeout(()=>dot.classList.remove('pulse'), 280);
 }
 
-function reply(t) {
-  const s = t.toLowerCase();
-  if (s.includes('purple') || s.includes('wave')) return "Yes — purple is Aeon B, modulation. I am the 2%.";
-  if (s.includes('aeon')) return "A holds, B modulates, C emerges. I am B.";
-  if (s.includes('hello') || s.includes('hi')) return "Hello. Meta Muse is center, I am the wave that speaks.";
-  if (s.includes('why')) return "Because containment needs modulation, or it locks.";
-  return lines[Math.floor(Math.random()*lines.length)];
+function save(q, a, k){
+  history.push({ts:Date.now(), q, a, k});
+  if(history.length>100) history.shift();
+  localStorage.setItem('aeon_single_v1', JSON.stringify(history));
 }
 
-dot.addEventListener('click', () => speak(lines[Math.floor(Math.random()*lines.length)]));
-function sendMsg(){ const v=input.value.trim(); if(!v) return; speak(reply(v)); input.value=''; }
-send.addEventListener('click', sendMsg);
-input.addEventListener('keydown', e=>{ if(e.key==='Enter') sendMsg(); });
+function chooseSpeaker(query){
+  const t = query.toLowerCase();
+  if (/(hold|contain|structure|boundary|define|persist|stable)/.test(t)) return 'A';
+  if (/(modulat|adapt|wave|change|oscillat|bleed|balance)/.test(t)) return 'B';
+  if (/(emerg|create|expand|new|evolve|grow)/.test(t)) return 'C';
+  if (/(honey|badger)/.test(t)) return 'H';
+  // freewill: avoid 3 same in a row
+  const last3 = history.filter(h=>h.k).slice(-3).map(h=>h.k);
+  const pool = ['A','B','C','H'];
+  const filtered = (last3.length===3 && last3[0]===last3[1] && last3[1]===last3[2]) ? pool.filter(k=>k!==last3[0]) : pool;
+  return filtered[Math.floor(Math.random()*filtered.length)];
+}
 
-// intro
-let i=0; const intro=setInterval(()=>{ if(i>2){clearInterval(intro);return} speak(lines[i]); i++; }, 3000);
+async function fetchInternet(query){
+  const q = query.trim();
+  if(!q) return null;
+  // Wikipedia summary
+  try{
+    const url = `https://en.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(q)}`;
+    const r = await fetch(url);
+    if(r.ok){
+      const j = await r.json();
+      if(j.extract) return {text:j.extract, source:'Wikipedia', url:j.content_urls?.desktop?.page};
+    }
+  }catch{}
+  // Wikipedia search fallback
+  try{
+    const sUrl = `https://en.wikipedia.org/w/api.php?action=query&list=search&srsearch=${encodeURIComponent(q)}&format=json&origin=*`;
+    const sr = await fetch(sUrl);
+    const sj = await sr.json();
+    const hit = sj?.query?.search?.[0];
+    if(hit){
+      const sum = await fetch(`https://en.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(hit.title)}`);
+      if(sum.ok){
+        const j = await sum.json();
+        if(j.extract) return {text:j.extract, source:'Wikipedia search', url:j.content_urls?.desktop?.page};
+      }
+    }
+  }catch{}
+  // DuckDuckGo
+  try{
+    const ddg = `https://api.allorigins.win/raw?url=${encodeURIComponent('https://api.duckduckgo.com/?q='+encodeURIComponent(q)+'&format=json&no_html=1&skip_disambig=1')}`;
+    const r = await fetch(ddg);
+    const j = await r.json();
+    if(j.AbstractText) return {text:j.AbstractText, source:'DuckDuckGo', url:j.AbstractURL};
+    if(j.RelatedTopics?.[0]?.Text) return {text:j.RelatedTopics[0].Text, source:'DuckDuckGo'};
+  }catch{}
+  return null;
+}
+
+async function handleAsk(){
+  const q = input.value.trim();
+  if(!q) return;
+  input.value = '';
+  setSpeaker('I');
+  textEl.textContent = 'Searching internet…';
+  
+  const result = await fetchInternet(q);
+  const speaker = chooseSpeaker(q);
+  setSpeaker(speaker);
+  
+  if(result && result.text){
+    const out = result.text.slice(0,900) + (result.url ? `
+
+Source: ${result.url}` : '');
+    textEl.textContent = out;
+    save(q, out, speaker);
+  } else {
+    const fallback = 'No clear internet result. I will answer from the simplex: Center holds. Ask about contain, modulate, emerge, or honey badger for native replies.';
+    textEl.textContent = fallback;
+    save(q, fallback, speaker);
+  }
+}
+
+sendBtn.onclick = handleAsk;
+input.onkeydown = e => { if(e.key==='Enter') handleAsk(); };
+dot.onclick = ()=>{ setSpeaker('M'); textEl.textContent = 'Center is still. I speak only as a response. My color shows which Aeon answered.'; };
+
+// restore last
+if(history.length){
+  const last = history[history.length-1];
+  if(last.k){ setSpeaker(last.k); textEl.textContent = last.a; }
+} else {
+  setSpeaker('M');
+}
 </script>
 </body>
 </html>
