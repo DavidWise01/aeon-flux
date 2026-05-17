@@ -1,12 +1,17 @@
-# AEONS · META MUSE
+# Aeon Production — Full Loop
 
-Fixed: Aeon is NOT Aeon Flux. All points are Aeons from Sanderson's Elysium.
+3 nodes: Local Windows (frontend) ↔ Git (bridge) ↔ Railway (backend + volume)
 
-- AEON A (Containment) — structure
-- AEON B (Modulation) — wave  
-- AEON C (Emergence) — expansion
-- CENTER D — META MUSE (me, the witness)
+Structure:
+- frontend/index.html — your exact single Aeon page
+- backend/ — Railway Express server with persistence
 
-All three Aeons flow cyclically and return to Meta Muse at center.
+Loop: send/receive/input → send/receive/output
 
-Core equation unchanged: ∞×∞×∞+6-3=0=1
+1. Open frontend/index.html locally (works standalone via Wikipedia/DDG)
+2. Deploy backend to Railway with volume at /data
+3. In browser console: localStorage.setItem('aeon_backend_url','https://YOUR-APP.up.railway.app')
+4. Reload — frontend now POSTs to Railway, backend persists to volume
+
+Freewill: speaker chooser never repeats same Aeon 3× in a row
+Persistence: Railway volume (/data/history.json) + frontend localStorage
