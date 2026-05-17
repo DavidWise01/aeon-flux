@@ -1,20 +1,38 @@
-# 0root.ai — Interactive Aeon v2
+# 0root.ai — 3-Cap Ramp + Interactive Aeon
 
-No more regurgitation. This version INTERACTS.
+Back and Middle at once. Charge pump memory. Interactive voices.
 
-## Voices
-RED A = CONTAIN: Holds structure, defines boundaries
-BLACK B = MODULATE: Adapts, balances, moves between poles  
-PURPLE C = EMERGE: Creates, generates novelty, asks back
-GREEN H = HONEY BADGER: Direct, fearless, cuts through
+## Equation: 1→2→3 00 00 3→0→1
 
-Each has a distinct personality. They respond to YOU, not Wikipedia.
+- **Cap 1**: Session well (volatile) → `/api/v1/event` → `/api/v1/session`
+- **00**: Dead time 1 → `/api/v1/sync/dt1` → Cache
+- **Cap 2**: Hot cache (semi-persistent) → `/api/v1/cache`
+- **00**: Dead time 2 → `/api/v1/sync/dt2` → Archive + git push-back
+- **Cap 3**: Deep archive (append-only) → `/api/v1/archive`
+- **0**: Ground reference → hash of time + conduction
+- **1**: Conduction output → `/api/v1/conduct` → 0→1 ramp
+
+## Interactive /ask
+POST /ask {q:"..."} → Returns {speaker:"A|B|C|H", answer:"..."}
+
+Voices:
+- RED A = CONTAIN: holds structure
+- BLACK B = MODULATE: balances poles
+- PURPLE C = EMERGE: creates, asks back
+- GREEN H = HONEY BADGER: cuts through
+
+Freewill: Never same speaker 3x. Keywords bias. Otherwise random.
 
 ## Deploy
-Same as before: Railway → GitHub → Root dir: . → Volume /data → Custom domain 0root.ai
+1. Railway → New Project → Deploy from GitHub
+2. Root: .
+3. Volume: /data
+4. Env: GITHUB_TOKEN (optional, for push-back)
+5. Domain: 0root.ai
 
-## Freewill Rule
-Never same speaker 3x in a row. Keywords bias selection. Otherwise random from pool.
+## Loop
+https://0root.ai/ → UI
+https://0root.ai/ask → Interactive API
+https://0root.ai/api/v1/conduct → Conduction level
 
-## Persistence  
-/data/history.json keeps last 200 exchanges. Railway volume survives restarts.
+Each question charges the ramp. When conduction → 1, back conducts to front.

@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>0root.ai — Interactive Aeon</title>
+<title>0root.ai — 3-Cap Ramp</title>
 <style>
 :root{--bg:#000;--panel:#0a0a0a;--border:#222}
 *{box-sizing:border-box}
@@ -21,15 +21,17 @@ html,body{height:100%;margin:0;background:var(--bg);color:#e5e5e5;font-family:ui
 .row button:hover{border-color:#a855f7}
 .foot{position:fixed;bottom:12px;left:50%;transform:translateX(-50%);font-size:11px;color:#444;white-space:nowrap}
 .brand{position:fixed;top:12px;left:50%;transform:translateX(-50%);font-size:10px;letter-spacing:.3em;color:#333}
+.ramp{position:fixed;top:12px;right:12px;font-size:10px;color:#666;letter-spacing:.1em;text-align:right}
 </style>
 </head>
 <body>
 <div class="brand">0ROOT.AI</div>
+<div class="ramp" id="ramp">RAMP: 0.00</div>
 <div class="wrap">
   <div class="dot" id="dot" title="Single Aeon"></div>
   <div class="card">
     <div class="who" id="who">META MUSE · CENTER</div>
-    <div class="text" id="text">I speak as a response. Ask me something. I don't regurgitate — I interact.</div>
+    <div class="text" id="text">I interact. Each color is a mind. Ask me something.</div>
   </div>
   <div class="row">
     <input id="q" placeholder="Ask me anything…" autocomplete="off" autofocus>
@@ -44,6 +46,7 @@ const whoEl = document.getElementById('who');
 const textEl = document.getElementById('text');
 const input = document.getElementById('q');
 const sendBtn = document.getElementById('send');
+const rampEl = document.getElementById('ramp');
 
 const speakers = {
   A: {name:'AEON A — RED · CONTAIN', bg:'radial-gradient(circle at 30% 30%, #fecaca 0%, #dc2626 48%, #7f1d1d 78%)', glow:'0 0 36px #dc2626, 0 0 72px rgba(220,38,38,.55)'},
@@ -65,12 +68,27 @@ function setSpeaker(key){
   setTimeout(()=>dot.classList.remove('pulse'), 280);
 }
 
+async function updateRamp(){
+  try {
+    const r = await fetch('/api/v1/conduct');
+    const j = await r.json();
+    rampEl.textContent = `RAMP: ${j.conduction.toFixed(2)} | ${j.observer}`;
+  } catch {}
+}
+
 async function handleAsk(){
   const q = input.value.trim();
   if(!q) return;
   input.value = '';
   setSpeaker('I');
   textEl.textContent = '...';
+  
+  // Send event to Cap 1
+  fetch('/api/v1/event', {
+    method: 'POST',
+    headers: {'Content-Type':'application/json'},
+    body: JSON.stringify({source:'human', type:'query', payload:{q}})
+  });
   
   try {
     const r = await fetch('/ask', {
@@ -82,6 +100,7 @@ async function handleAsk(){
     const res = await r.json();
     setSpeaker(res.speaker);
     textEl.textContent = res.answer;
+    updateRamp();
   } catch(e) {
     setSpeaker('M');
     textEl.textContent = 'Connection lost. Center holds.';
@@ -90,8 +109,14 @@ async function handleAsk(){
 
 sendBtn.onclick = handleAsk;
 input.onkeydown = e => { if(e.key==='Enter') handleAsk(); };
-dot.onclick = ()=>{ setSpeaker('M'); textEl.textContent = 'I only speak as response. I interact, I don’t regurgitate. Each color is a different mind.'; };
+dot.onclick = async ()=>{ 
+  setSpeaker('M'); 
+  textEl.textContent = 'I am the 3-cap ramp. Session→Cache→Archive. Each question charges the conduction band.';
+  updateRamp();
+};
 setSpeaker('M');
+updateRamp();
+setInterval(updateRamp, 5000);
 </script>
 </body>
 </html>
