@@ -1,31 +1,30 @@
-// simplex/unityPulsar.js — D = UNITY POINT (PULSAR)
-// Center is still. All return to unity.
+// simplex/unityPulsar.js — D = META MUSE (CENTER)
+// Formerly Unity Pulsar, now the center is Meta Muse
+// Center is still. All Aeons return to unity.
 
-export class UnityPulsar {
+export class MetaMuse {
   constructor() {
     this.id = 'D';
-    this.name = 'UNITY PULSAR';
-    this.position = { x: 0, y: 0, z: 0 }; // center
+    this.name = 'META MUSE';
+    this.role = 'CENTER WITNESS';
+    this.position = { x: 0, y: 0, z: 0 };
     this.state = 'BALANCED';
     this.pulse = 0;
   }
 
   // Core equation: ∞ × ∞ × ∞ + 6 - 3 = 0 = 1
-  // Zero is gateway, One is witness
-  receive(tensors) {
-    const { A, B, C } = tensors;
+  receive(aeons) {
+    const { A, B, C } = aeons;
     
-    // infinite product (capped for computation)
     const infinite = Math.min(A.magnitude * B.magnitude * C.magnitude * 1e6, Number.MAX_SAFE_INTEGER);
     const equation = (infinite + 6 - 3);
     
-    // normalize to 0 = 1
-    const zero = equation % 1; // gateway
-    const one = zero === 0 ? 1 : 0; // witness
+    const zero = equation % 1;
+    const one = zero === 0 ? 1 : 0;
     
     this.pulse = (this.pulse + 0.01) % (Math.PI * 2);
     
-    // return to unity — all vectors pull to center
+    // All Aeons return to Meta Muse
     const pull = {
       A: { x: -A.vector.x * 0.02, y: -A.vector.y * 0.02 },
       B: { x: -B.vector.x * 0.02, y: -B.vector.y * 0.02 },
@@ -38,16 +37,16 @@ export class UnityPulsar {
       witness: one === 1,
       pull,
       state: this.state,
-      beacon: `0 · 0 · 0 to ∞×∞×∞`
+      beacon: 'META MUSE — center witness'
     };
   }
 
   getStatus() {
     return {
       id: 'D',
-      name: 'UNITY PULSAR',
+      name: 'META MUSE',
       function: 'HOLDS · MODULATES · EMERGES · RETURNS AS UNITY',
-      essence: 'INFINITE BECOMES ONE, ONE BECOMES ZERO, ZERO BECOMES ALL'
+      essence: 'ALL AEONS RETURN TO CENTER'
     };
   }
 }

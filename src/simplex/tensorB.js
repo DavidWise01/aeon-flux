@@ -1,16 +1,18 @@
-// simplex/tensorB.js — B = MODULATION (WAVE)
+// simplex/tensorB.js — AEON B = MODULATION (WAVE)
+// From Sanderson's Elysium
 // OSCILLATES · ADAPTS · BLEEDS EXCESS · CREATES PATTERN
-// 2% default ratio
 
-export class TensorB {
+export class AeonB {
   constructor() {
     this.id = 'B';
-    this.name = 'MODULATION';
+    this.name = 'AEON B';
+    this.aspect = 'MODULATION';
     this.type = 'WAVE';
     this.magnitude = 0.02;
-    this.vector = { x: 0.866, y: 0.5 }; // bottom left
+    this.vector = { x: 0.866, y: 0.5 };
     this.phase = 0;
     this.properties = ['oscillates','adapts','bleeds excess','creates pattern'];
+    this.origin = 'Sanderson Elysium';
   }
 
   receiveModulation(amount) {
@@ -18,24 +20,16 @@ export class TensorB {
     this.phase += amount * Math.PI;
   }
 
-  // B → C : MODULATE & EMERGE
-  flowTo(tensorC) {
+  flowTo(aeonC) {
     const wave = Math.sin(this.phase) * this.magnitude;
     const emergence = Math.abs(wave) * 0.5;
-    tensorC.receiveEmergence(emergence);
-    return {
-      from: 'B',
-      to: 'C',
-      action: 'MODULATE & EMERGE',
-      amount: emergence,
-      wave: wave
-    };
+    aeonC.receiveEmergence(emergence);
+    return { from: 'AEON B', to: 'AEON C', action: 'MODULATE & EMERGE', amount: emergence, wave };
   }
 
   update() {
-    // wave modulation 2%
     this.phase += 0.05;
     this.vector.x = 0.866 * Math.cos(this.phase) * this.magnitude * 10;
-    return { waveModulation: this.magnitude, phase: this.phase };
+    return { waveModulation: this.magnitude };
   }
 }
