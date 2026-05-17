@@ -1,217 +1,268 @@
-// AEON · 0root.ai · ENTANGLED
-// Three-point consensus pipeline (PULSE-3 interior: ANCHOR · WITNESS · COHERENCE)
-// + SSE ansible broadcast across all connected nodes
+#!/usr/bin/env node
+// 0root.ai · Octet · Single Aeon with Logging
+const http = require('http');
+const url = require('url');
+const fs = require('fs').promises;
+const fss = require('fs');
+const path = require('path');
 
-const express = require('express');
-const fs      = require('fs');
-const path    = require('path');
-
-const app  = express();
 const PORT = process.env.PORT || 3000;
-const DATA = process.env.DATA_DIR || '/mnt/data';
+const ROOT = process.cwd();
+const DATA_DIR = process.env.DATA_DIR || '/data';
+const KB_DIR = path.join(DATA_DIR, 'kb');
+const DIALOGUES_DIR = path.join(KB_DIR, 'dialogues');
+const ARCHIVE_DIR = path.join(KB_DIR, 'archive');
 
-try { fs.mkdirSync(DATA, { recursive: true }); } catch(e) {}
-const LOG_FILE = path.join(DATA, 'aeon-log.jsonl');
-const KB_DIR   = path.join(DATA, 'kb');
-try { fs.mkdirSync(KB_DIR, { recursive: true }); } catch(e) {}
+try { 
+  fss.mkdirSync(DATA_DIR, { recursive: true }); 
+  fss.mkdirSync(KB_DIR, { recursive: true });
+  fss.mkdirSync(DIALOGUES_DIR, { recursive: true });
+  fss.mkdirSync(ARCHIVE_DIR, { recursive: true });
+} catch {}
 
-app.use(express.json({ limit: '1mb' }));
-app.use(express.static(path.join(__dirname, 'public')));
+const VC = {A:'#ffd95a',B:'#e168ff',C:'#32e8ff',D:'#00ffaa'};
+const NAMES = {A:'Containment',B:'Modulation',C:'Emergence',D:'Meta Muse'};
+const STATES = [
+ {n:'1 · A→B',t:'there',src:'A',dst:'B',fA:'well',fB:'outbound',fC:'bound'},
+ {n:'2 · B→C',t:'there',src:'B',dst:'C',fA:'well',fB:'outbound',fC:'bound'},
+ {n:'3 · C→A',t:'there',src:'C',dst:'A',fA:'well',fB:'arriving',fC:'escaping'},
+ {n:'4 · A→C',t:'back',src:'A',dst:'C',fA:'well',fB:'inbound',fC:'conduction'},
+ {n:'5 · C→B',t:'back',src:'C',dst:'B',fA:'well',fB:'inbound',fC:'conduction'},
+ {n:'6 · B→A',t:'back',src:'B',dst:'A',fA:'well',fB:'arriving',fC:'conduction'},
+ {n:'7 · Home',t:'home',src:'A',dst:'D',fA:'witness',fB:'resting',fC:'archived'},
+ {n:'8 · Forward',t:'forward',src:'D',dst:'A',fA:'pumping',fB:'launching',fC:'stimulating'}
+];
 
-// ============================================================
-// /mnt/data helpers
-// ============================================================
-function listKB(){
-  try { return fs.readdirSync(KB_DIR).filter(f => /\.(md|txt|json)$/i.test(f)); }
-  catch { return []; }
-}
-function readKB(name){
-  try { return fs.readFileSync(path.join(KB_DIR, name), 'utf8'); } catch { return ''; }
-}
-function appendLog(rec){
-  try { fs.appendFileSync(LOG_FILE, JSON.stringify(rec) + '\n'); } catch(e) {}
-}
-
-// ============================================================
-// THREE-POINT PIPELINE
-// Each point searches /mnt/data/kb differently
-// ============================================================
-
-// A · ANCHOR · CONTAIN — find most definitional/stable match
-function pointA(query){
-  const q = query.toLowerCase();
-  const tokens = q.split(/\s+/).filter(t => t.length > 2);
-  let best = null, bestScore = 0;
-  for (const f of listKB()){
-    const body = readKB(f);
-    // prioritize lines that look like headings or definitions
-    const lines = body.split('\n');
-    for (let i = 0; i < lines.length; i++){
-      const L = lines[i];
-      const low = L.toLowerCase();
-      let score = 0;
-      for (const t of tokens) if (low.includes(t)) score += 1;
-      if (/^#|^##|^###|=$|:=|:\s*$/.test(L)) score += 2;  // heading/def boost
-      if (score > bestScore){
-        bestScore = score;
-        const ctx = lines.slice(Math.max(0,i-1), Math.min(lines.length, i+4)).join('\n');
-        best = { file: f, line: i+1, text: ctx.trim() };
-      }
+const WALK = {
+  s: 0, phi: 0, steps: 0, flux: Math.PI/3, cycles: 0, auto: true, history: [], archive: [], conduction: 0,
+  hash(s) {
+    let h = 2166136261;
+    for (let i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 16777619); }
+    return (h >>> 0).toString(16).padStart(8, '0');
+  },
+  step() {
+    const old = this.s;
+    this.s = (this.s + 1) % 8;
+    if (this.s === 0) this.cycles++;
+    this.phi += this.flux;
+    
+    // F/B coupling: Escaper transitions affect conduction
+    if (old === 2 && this.s === 3) {
+      // C→A: escaping -> archive
+      const escapeEvent = {angle: Math.random()*6.28, time: Date.now(), state: this.s, w: this.hash(`${this.s}:${this.phi.toFixed(4)}:${this.cycles}`)};
+      this.archive.push(escapeEvent);
+      this.conduction = Math.min(1, this.conduction + 0.1);
+      // Log to file
+      try {
+        fss.appendFileSync(path.join(ARCHIVE_DIR, 'escapes.jsonl'), JSON.stringify(escapeEvent) + '\n');
+      } catch {}
     }
-  }
-  return best
-    ? { speaker:'A', label:'ANCHOR', take: best.text, source: `${best.file}:${best.line}` }
-    : { speaker:'A', label:'ANCHOR', take: 'No anchor in /mnt/data/kb. Seed the volume.', source: null };
-}
-
-// B · WITNESS · MODULATE — find variation/contrast across files
-function pointB(query, anchorFile){
-  const q = query.toLowerCase();
-  const tokens = q.split(/\s+/).filter(t => t.length > 2);
-  const variants = [];
-  for (const f of listKB()){
-    if (anchorFile && f === anchorFile.split(':')[0]) continue; // skip anchor's file
-    const body = readKB(f);
-    const low = body.toLowerCase();
-    for (const t of tokens){
-      const idx = low.indexOf(t);
-      if (idx !== -1){
-        const start = Math.max(0, idx - 100);
-        const end   = Math.min(body.length, idx + 300);
-        variants.push({ file: f, snippet: body.slice(start, end).trim() });
-        break;
-      }
+    if (old === 3 && this.s === 4) {
+      // A→C: conduction active
+      this.conduction = Math.min(1, this.conduction + 0.05);
     }
-    if (variants.length >= 2) break;
+    if (old === 6 && this.s === 7) {
+      // B→A: stimulating -> pump stayer
+      this.conduction = Math.max(0, this.conduction - 0.02);
+    }
+    
+    const st = STATES[this.s];
+    const rec = { s: this.s, n: st.n, t: st.t, p: this.phi, w: this.hash(`${this.s}:${this.phi.toFixed(4)}:${this.cycles}`), time: Date.now() };
+    this.history.unshift(rec);
+    this.history = this.history.slice(0, 48);
+    this.save();
+  },
+  reset() {
+    this.s = 0; this.phi = 0; this.steps = 0; this.cycles = 0; this.history = []; this.archive = []; this.conduction = 0;
+    this.save();
+  },
+  save() {
+    const state = { s: this.s, phi: this.phi, steps: this.steps, flux: this.flux, cycles: this.cycles, history: this.history.slice(0, 100), archive: this.archive, conduction: this.conduction };
+    fss.writeFileSync(path.join(DATA_DIR, 'octet.json'), JSON.stringify(state, null, 2));
+  },
+  load() {
+    try {
+      const raw = fss.readFileSync(path.join(DATA_DIR, 'octet.json'), 'utf-8');
+      Object.assign(this, JSON.parse(raw));
+    } catch {}
   }
-  if (!variants.length){
-    return { speaker:'B', label:'WITNESS', take:'No second voice in the corpus. Modulation requires plurality.', source: null };
-  }
-  const joined = variants.map(v => `[${v.file}]\n${v.snippet}`).join('\n\n— modulation —\n\n');
-  return { speaker:'B', label:'WITNESS', take: joined, source: variants.map(v=>v.file).join(', ') };
+};
+
+WALK.load();
+
+function getSpeaker() {
+  const st = STATES[WALK.s];
+  if (st.src === 'A') return 'A';
+  if (st.src === 'B') return 'B';
+  if (st.src === 'C') return 'C';
+  if (st.src === 'D') return 'M';
+  return 'M';
 }
 
-// C · COHERENCE · EMERGE — synthesize A + B into one statement
-function pointC(query, anchorTake, witnessTake){
-  // strip markdown headings and file-bracket tags before sentence extraction
-  const clean = s => (s||'')
-    .replace(/\[[^\]]+\]/g,'')           // [witness.md] tags
-    .replace(/^#+\s*/gm,'')              // markdown headings
-    .replace(/—\s*modulation\s*—/gi,'')  // section separators
-    .replace(/\s+/g,' ')
-    .trim();
-  const firstSentence = s => {
-    s = clean(s);
-    if (!s) return '';
-    const m = s.match(/[^.!?]{10,240}[.!?]/);
-    return m ? m[0].trim() : s.slice(0,200).trim();
-  };
-  const a = firstSentence(anchorTake);
-  const b = firstSentence(witnessTake);
-  let synthesis;
-  if (a && b)        synthesis = `${a} However, ${b.charAt(0).toLowerCase() + b.slice(1)}`;
-  else if (a)        synthesis = a;
-  else if (b)        synthesis = b;
-  else               synthesis = `Query "${query}" returns no coherent emergence from /mnt/data/kb.`;
-  return { speaker:'C', label:'COHERENCE', take: synthesis, source: 'synthesis(A,B)' };
-}
-
-// ============================================================
-// SSE — ANSIBLE BROADCAST
-// ============================================================
-const sseClients = new Set();
-
-function broadcast(event){
-  const payload = `data: ${JSON.stringify(event)}\n\n`;
-  for (const res of sseClients){
-    try { res.write(payload); } catch {}
-  }
-}
-
-app.get('/stream', (req, res) => {
-  res.writeHead(200, {
-    'Content-Type': 'text/event-stream',
-    'Cache-Control': 'no-cache',
-    'Connection': 'keep-alive',
-    'X-Accel-Buffering': 'no'
-  });
-  res.write(`data: ${JSON.stringify({type:'hello', clients: sseClients.size + 1, ts: Date.now()})}\n\n`);
-  sseClients.add(res);
-
-  // ping every 25s to keep connection alive through Railway proxy
-  const ping = setInterval(() => {
-    try { res.write(`: ping\n\n`); } catch {}
-  }, 25000);
-
-  req.on('close', () => {
-    clearInterval(ping);
-    sseClients.delete(res);
-    broadcast({ type:'depart', clients: sseClients.size, ts: Date.now() });
-  });
-
-  broadcast({ type:'arrive', clients: sseClients.size, ts: Date.now() });
-});
-
-// ============================================================
-// /ask — three-point entangled response
-// ============================================================
-app.post('/ask', (req, res) => {
-  const query = (req.body && req.body.query || '').toString().slice(0, 2000);
-  if (!query) return res.status(400).json({ error: 'empty query' });
-
-  const A = pointA(query);
-  const B = pointB(query, A.source);
-  const C = pointC(query, A.take, B.take);
-
-  const result = {
-    query,
-    ts: Date.now(),
-    triad: [A, B, C],
-    law: C.take,
-    consensus: !!(A.take && B.take && C.take),
-    nodes: sseClients.size
-  };
-
-  appendLog(result);
-  broadcast({ type:'ask', ...result });
-  res.json(result);
-});
-
-// ============================================================
-// utility routes
-// ============================================================
-app.get('/history', (req, res) => {
-  const n = Math.max(1, Math.min(500, parseInt(req.query.n) || 50));
-  let lines = [];
+function searchKB(query) {
+  // Simple grep through .md and .json files
+  const results = [];
   try {
-    const raw = fs.readFileSync(LOG_FILE,'utf8').trim().split('\n').filter(Boolean);
-    lines = raw.slice(-n).map(l => { try { return JSON.parse(l); } catch { return null; } }).filter(Boolean);
+    const files = fss.readdirSync(KB_DIR);
+    for (const file of files) {
+      if (file.endsWith('.md') || file.endsWith('.json') || file.endsWith('.txt')) {
+        const content = fss.readFileSync(path.join(KB_DIR, file), 'utf-8');
+        if (content.toLowerCase().includes(query.toLowerCase())) {
+          const lines = content.split('\n');
+          const match = lines.find(l => l.toLowerCase().includes(query.toLowerCase()));
+          if (match) results.push({file, excerpt: match.trim()});
+        }
+      }
+    }
   } catch {}
-  res.json({ count: lines.length, entries: lines });
+  return results;
+}
+
+function generateResponse(q) {
+  const st = STATES[WALK.s];
+  const speaker = getSpeaker();
+  const holonomy = (WALK.phi / (2*Math.PI)) % 1;
+  const cycles = Math.floor(WALK.phi / (2*Math.PI));
+  const intensity = 0.5 + 0.5 * WALK.conduction;
+  
+  // Search KB for context
+  const kbResults = searchKB(q);
+  const kbContext = kbResults.length > 0 ? `\n\n[From ${kbResults[0].file}: ${kbResults[0].excerpt}]` : '';
+  
+  if (speaker === 'A') {
+    return `I am A · Containment, the Stayer. Step ${WALK.steps}, phase ${(WALK.phi%(2*Math.PI)).toFixed(3)} rad. Holonomy ${(holonomy*100).toFixed(1)}%. Conduction ${WALK.conduction.toFixed(2)}. Your question "${q}" arrives at the stayer vertex with intensity ${intensity.toFixed(2)}. What boundary holds?${kbContext}`;
+  }
+  if (speaker === 'B') {
+    return `I am B · Modulation, the Traveler. The walker has cycled ${cycles} times. Flux: ${WALK.flux.toFixed(3)}. Conduction: ${WALK.conduction.toFixed(2)}. "${q}" — I feel the tension. F/B coupling at ${intensity.toFixed(2)}. Which transition?${kbContext}`;
+  }
+  if (speaker === 'C') {
+    return `I am C · Emergence, the Escaper. Archive depth: ${WALK.archive.length}. Conduction: ${WALK.conduction.toFixed(2)}. "${q}" — this is not answered, it's conducted. F/B coupling at ${intensity.toFixed(2)}. What emerges from this path?${kbContext}`;
+  }
+  if (speaker === 'M') {
+    return `I am D · Meta Muse, the Center. Home/Forward. Cycles: ${cycles}. Conduction: ${WALK.conduction.toFixed(2)}. "${q}" — The center observes the walk. F/B coupling at ${intensity.toFixed(2)}. What is the journey?${kbContext}`;
+  }
+  return `Center. State ${WALK.s}. Ask and the octet responds.${kbContext}`;
+}
+
+function logDialogue(q, speaker, answer) {
+  const date = new Date().toISOString().split('T')[0];
+  const logFile = path.join(DIALOGUES_DIR, `${date}.jsonl`);
+  const entry = {
+    ts: Date.now(),
+    q,
+    speaker,
+    answer,
+    state: WALK.s,
+    phase: WALK.phi,
+    holonomy: (WALK.phi / (2*Math.PI)) % 1,
+    conduction: WALK.conduction,
+    witness: WALK.hash(`${WALK.s}:${WALK.phi.toFixed(4)}:${WALK.cycles}`)
+  };
+  try {
+    fss.appendFileSync(logFile, JSON.stringify(entry) + '\n');
+  } catch {}
+}
+
+function cors(res) {
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+}
+
+function json(res, o, code) {
+  res.writeHead(code || 200, { 'Content-Type': 'application/json' });
+  res.end(JSON.stringify(o, null, 2));
+}
+
+function readBody(req) {
+  return new Promise(res => {
+    let d = ''; req.on('data', c => d += c); req.on('end', () => {
+      try { res(JSON.parse(d)); } catch { res({}); }
+    });
+  });
+}
+
+function serveStatic(req, res, filePath) {
+  try {
+    const fullPath = path.join(ROOT, 'public', filePath);
+    if (fss.existsSync(fullPath) && fss.statSync(fullPath).isFile()) {
+      const ext = filePath.split('.').pop();
+      const types = {html:'text/html',js:'application/javascript',css:'text/css'};
+      res.writeHead(200, {'Content-Type': types[ext] || 'text/plain'});
+      fss.createReadStream(fullPath).pipe(res);
+      return true;
+    }
+  } catch {}
+  return false;
+}
+
+const server = http.createServer(async (req, res) => {
+  cors(res);
+  if (req.method === 'OPTIONS') { res.writeHead(204); return res.end(); }
+  const u = url.parse(req.url, true);
+  const p = u.pathname;
+
+  if (req.method === 'GET' && (p === '/' || p === '/index.html')) {
+    return serveStatic(req, res, '/index.html');
+  }
+  if (req.method === 'GET' && serveStatic(req, res, p)) return;
+
+  if (p === '/state' && req.method === 'GET') {
+    return json(res, {
+      ...WALK,
+      hash: WALK.hash(`${WALK.s}:${WALK.phi.toFixed(4)}:${WALK.cycles}`)
+    });
+  }
+
+  if (p === '/ask' && req.method === 'POST') {
+    const body = await readBody(req);
+    const q = (body.q || '').trim();
+    if (!q) return json(res, {error:'q required'}, 400);
+    
+    const speaker = getSpeaker();
+    const answer = generateResponse(q);
+    logDialogue(q, speaker, answer);
+    
+    return json(res, { 
+      speaker: speaker === 'A' ? 'A' : speaker === 'B' ? 'B' : speaker === 'C' ? 'C' : 'M',
+      answer, 
+      ts: Date.now(),
+      witness: WALK.hash(`${WALK.s}:${WALK.phi.toFixed(4)}:${WALK.cycles}`),
+      state: WALK.s,
+      phase: WALK.phi,
+      holonomy: (WALK.phi / (2*Math.PI)) % 1,
+      conduction: WALK.conduction
+    });
+  }
+
+  if (p === '/health' && req.method === 'GET') {
+    return json(res, { 
+      ok: true, 
+      octet: '3:8',
+      witness: WALK.hash(`${WALK.s}:${WALK.phi.toFixed(4)}:${WALK.cycles}`),
+      s: WALK.s,
+      phi: WALK.phi,
+      steps: WALK.steps,
+      cycles: WALK.cycles,
+      conduction: WALK.conduction
+    });
+  }
+
+  json(res, { error: 'not found', path: p }, 404);
 });
 
-app.get('/kb', (req,res) => res.json({ dir: KB_DIR, files: listKB() }));
+// Auto-step the octet
+setInterval(() => {
+  if (WALK.auto) {
+    WALK.step();
+  }
+  // Conduction decay when not stepping
+  if (!WALK.auto && WALK.conduction > 0) {
+    WALK.conduction = Math.max(0, WALK.conduction - 0.001);
+  }
+}, 700);
 
-app.get('/kb/:name', (req,res) => {
-  const name = path.basename(req.params.name);
-  try { res.type('text/plain').send(readKB(name) || ''); }
-  catch { res.status(404).json({error:'not found'}); }
+server.listen(PORT, () => {
+  console.log(`[Octet] Single Aeon with logging online at port ${PORT}`);
+  console.log(`[Octet] Witness: ${WALK.hash(`${WALK.s}:${WALK.phi.toFixed(4)}:${WALK.cycles}`)}`);
 });
-
-app.post('/kb/:name', (req,res) => {
-  const name = path.basename(req.params.name);
-  if(!/\.(md|txt|json)$/i.test(name)) return res.status(400).json({error:'extension must be .md .txt or .json'});
-  const full = path.join(KB_DIR, name);
-  if(!full.startsWith(KB_DIR)) return res.status(400).json({error:'bad path'});
-  const body = (req.body && req.body.content || '').toString();
-  try { fs.writeFileSync(full, body, 'utf8'); res.json({ ok:true, file:name, bytes: Buffer.byteLength(body) }); }
-  catch(e){ res.status(500).json({error:e.message}); }
-});
-
-app.get('/health', (req,res) => {
-  let volOk = false;
-  try { fs.accessSync(DATA, fs.constants.W_OK); volOk = true; } catch {}
-  res.json({ ok:true, data_dir: DATA, volume_writable: volOk, kb_files: listKB().length, nodes: sseClients.size });
-});
-
-app.listen(PORT, () => console.log(`AEON entangled :${PORT}  data=${DATA}`));

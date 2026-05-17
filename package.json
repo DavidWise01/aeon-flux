@@ -1,9 +1,9 @@
 {
-  "name": "aeon-entangled",
-  "version": "2.0.0",
-  "description": "Aeon three-point entangled · /mnt/data backend · SSE ansible",
+  "name": "0root-ai-single-aeon-logging",
+  "version": "11.0.0",
   "main": "server.js",
-  "scripts": { "start": "node server.js" },
-  "dependencies": { "express": "^4.19.2" },
-  "engines": { "node": ">=18" }
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {}
 }
