@@ -1,33 +1,25 @@
-# 0root.ai — Octet · Dynamic F/B
+# 0root.ai — Tensor Backend · Aeon
 
-Three Fates. 8-State Walk. Dynamic Front/Back coupling.
-
-## F/B Coupling
-The front (fates UI) and back (conduction/archive) are dynamically coupled:
-- **Escaper escaping** → writes to archive → increases conduction
-- **Conduction** → boosts escaper meter width → strengthens F/B coupling %
-- **Stimulating** → beams energy to stayer → conduction decays
-- **No step** → conduction slowly decays
-
-## Three Fates
-- **A · Stayer**: Containment vertex. Witnesses. Pumps during Forward.
-- **B · Traveler**: Modulation vertex. Walks the spine. Carries phase.
-- **C · Escaper**: Emergence vertex. Bounds, escapes, conducts, archives, stimulates.
-
-## Interactive
-Ask the octet. The current vertex answers with live state:
-- Step, phase, holonomy, cycles, conduction
-- Intensity modulated by F/B coupling %
+Backend for Tensor Client. Serves the 8-phase octet with three modes.
 
 ## Endpoints
-- GET /state → full octet state + conduction
-- POST /step → manual hop
-- POST /auto → toggle auto-walk
-- POST /set?flux=1.047 → set flux
-- POST /reset → back to rest
-- POST /ask → ask current vertex
+- GET /api/v1/state → full tensor state
+- GET /api/v1/archive?limit=12 → event archive
+- POST /api/v1/event → send event {type, payload}
+  - type: measure | spawn | reset | set_mode | set_vector
+
+## State
+- a, b, c: amplitudes
+- phiA, phiB, phiC: phases
+- phase: 0-7 (octet position)
+- cycles: full 8π rotations
+- T: coherence 0-1
+- mode: pocket | person
+- nodes: spawned entities
+- archive: event log
+- witness: hash
 
 ## Deploy
-Railway → Root: . → Volume: /data → Domain: 0root.ai
+Railway → Root: . → Volume: /data → Domain: your-backend.up.railway.app
 
-The middle is dynamic. Front and back conduct.
+Connect frontend by entering backend URL in "Back URL" field.

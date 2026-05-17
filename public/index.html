@@ -3,378 +3,159 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>AEON · Railway Bridge · Elantris</title>
-<!--
-=========================================================
-BACKEND CONTRACT (Railway)
-=========================================================
-POST  {BACKEND_URL}/ask
-  Content-Type: application/json
-  Body:   { "query": "string" }
-  200:    { "answer": "string",
-            "speaker": "A|B|C|H",   (optional - frontend falls back to freewill)
-            "source":  "string|url" (optional) }
-
-GET   {BACKEND_URL}/health
-  200:    any body (used for connection probe)
-
-CORS: backend must allow origin "*" or laptop origin / file://
-=========================================================
--->
+<title>Tensor Client · Aeon</title>
 <style>
-:root{
-  --bg:#000;
-  --panel:#0a0a0a;
-  --border:#222;
-  --ink:#e5e5e5;
-  --dim:#666;
-  --ok:#39ff14;
-  --bad:#dc2626;
-}
-*{box-sizing:border-box}
-html,body{height:100%;margin:0;background:var(--bg);color:var(--ink);font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
-.wrap{min-height:100%;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;gap:18px;padding:24px 16px 64px}
-
-/* CONFIG BAR */
-.config{
-  width:min(740px,94vw);
-  display:flex;gap:8px;align-items:center;
-  background:#080808;border:1px solid var(--border);border-radius:10px;padding:8px;
-  font-size:12px;
-}
-.config input{
-  flex:1;background:#000;border:1px solid #222;color:#ddd;
-  padding:8px 10px;border-radius:6px;font:inherit;outline:none;
-}
-.config input:focus{border-color:#a855f7}
-.config button{
-  background:#151515;border:1px solid #333;color:#ddd;
-  padding:8px 12px;border-radius:6px;cursor:pointer;font:inherit;
-}
-.config button:hover{border-color:#a855f7}
-#status{font-size:11px;letter-spacing:.1em;padding:0 6px;color:var(--dim);min-width:130px;text-align:right}
-.status-ok{color:var(--ok) !important}
-.status-bad{color:var(--bad) !important}
-
-/* AEON GLYPH */
-.glyph-frame{
-  width:170px;height:170px;
-  display:flex;align-items:center;justify-content:center;
-  transition:filter .35s, transform .25s;
-  margin-top:8px;
-  cursor:pointer;
-}
-.glyph-frame.pulse{transform:scale(1.06)}
-.glyph-frame svg{width:100%;height:100%;display:block}
-
-/* CARD */
-.card{
-  width:min(740px,94vw);
-  background:var(--panel);border:1px solid var(--border);border-radius:14px;padding:18px;
-}
-.who{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:#999;margin-bottom:10px}
-.text{min-height:72px;font-size:15px;line-height:1.6;white-space:pre-wrap;word-break:break-word}
-
-/* INPUT ROW */
-.row{display:flex;gap:10px;width:min(740px,94vw);margin-top:4px}
-.row input{
-  flex:1;background:#0f0f0f;border:1px solid #2a2a2a;color:#eee;
-  padding:13px 14px;border-radius:12px;font:inherit;outline:none;
-}
-.row input:focus{border-color:#a855f7;box-shadow:0 0 0 3px rgba(168,85,247,.18)}
-.row button{
-  background:#151515;border:1px solid #333;color:#ddd;
-  padding:0 20px;border-radius:12px;cursor:pointer;font:inherit;letter-spacing:.1em;
-}
-.row button:hover{border-color:#a855f7}
-
-.foot{
-  position:fixed;bottom:8px;left:50%;transform:translateX(-50%);
-  font-size:10px;color:#333;white-space:nowrap;letter-spacing:.1em;
-}
+:root{--bg:#020308;--ink:#d8e8e0;--gold:#ffd95a;--mag:#e168ff;--cyan:#32e8ff;--mint:#00ffaa;--panel:rgba(0,0,0,.6);--border:rgba(0,255,170,.18)}
+*{box-sizing:border-box}html,body{margin:0;height:100%;background:#000;color:var(--ink);font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;overflow:hidden}
+body{background:radial-gradient(circle at 50% 42%,rgba(0,255,170,.06),transparent 28%),linear-gradient(var(--border) 1px,transparent 1px),linear-gradient(90deg,var(--border) 1px,transparent 1px),var(--bg);background-size:100% 100%,30px 30px,30px 30px}
+canvas{position:fixed;inset:0}
+.ui{position:fixed;inset:0;padding:18px;display:grid;grid-template-rows:auto 1fr auto;gap:12px;pointer-events:none}
+.panel{pointer-events:auto;border:1px solid var(--border);background:var(--panel);backdrop-filter:blur(8px);border-radius:14px;padding:14px}
+h1{margin:0;font-size:15px;letter-spacing:.14em;color:var(--mint);font-weight:400}
+.row{display:flex;gap:10px;align-items:center}
+button{background:transparent;border:1px solid var(--border);color:var(--ink);padding:8px 14px;border-radius:8px;cursor:pointer;font:inherit;text-transform:uppercase;font-size:11px}
+button:hover,button.on{box-shadow:0 0 12px rgba(0,255,170,.2);color:var(--mint)}
+input[type=range]{width:100%;accent-color:var(--mint)}
+.meter{display:grid;grid-template-columns:60px 1fr 50px;gap:8px;align-items:center;font-size:11px;margin:4px 0}
+.track{height:6px;border:1px solid rgba(255,255,255,.12);background:#020712;border-radius:999px;overflow:hidden}
+.fill{height:100%;transition:width .2s}
+.footer{display:flex;justify-content:space-between;align-items:center;font-size:11px;color:#5a7a6f}
+.offline{background:rgba(180,40,40,.25);border-color:rgba(255,80,80,.4);color:#ffaaa0;padding:4px 10px;border-radius:6px;font-size:11px}
 </style>
 </head>
 <body>
-<div class="wrap">
-
-  <div class="config">
-    <input id="backend" placeholder="https://your-app.up.railway.app" autocomplete="off">
-    <button id="connect">CONNECT</button>
-    <span id="status">○ DISCONNECTED</span>
+<canvas id="cv"></canvas>
+<div class="ui">
+  <div class="panel" style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+    <h1>TENSOR CLIENT</h1>
+    <div id="badge" class="offline" style="display:none;margin-left:auto">OFFLINE</div>
+    <div style="margin-left:auto;font-size:11px;color:#7aa89a;display:flex;gap:8px;align-items:center" id="status">CONNECTING</div>
   </div>
-
-  <div class="glyph-frame" id="glyph-frame" title="Aeon">
-    <svg id="glyph" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg"></svg>
+  <div style="display:grid;grid-template-columns:260px 1fr 260px;gap:12px">
+    <div class="panel" style="display:flex;flex-direction:column;gap:10px">
+      <div style="font-size:12px;color:var(--mint);text-transform:uppercase;letter-spacing:.1em">Back URL</div>
+      <input id="backUrl" style="background:#020712;border:1px solid var(--border);color:var(--ink);padding:8px;border-radius:8px;font:inherit;width:100%" placeholder="https://your-app.up.railway.app">
+      <div style="font-size:12px;color:var(--mint);text-transform:uppercase;letter-spacing:.1em;margin-top:6px">Controls</div>
+      <div class="row"><button id="measure">Measure</button><button id="spawn">Spawn</button><button id="reset">Reset</button></div>
+      <div class="row"><button id="modePocket" class="on">Pocket</button><button id="modePerson">Person</button></div>
+      <div id="personSliders" style="display:none">
+        <div class="meter"><span style="color:var(--gold)">A</span><div class="track"><div class="fill" id="fA" style="width:60%;background:var(--gold)"></div></div><span id="vA">60</span></div>
+        <input type="range" id="sA" min="0" max="100" value="60">
+        <div class="meter"><span style="color:var(--mag)">B</span><div class="track"><div class="fill" id="fB" style="width:60%;background:var(--mag)"></div></div><span id="vB">60</span></div>
+        <input type="range" id="sB" min="0" max="100" value="60">
+        <div class="meter"><span style="color:var(--cyan)">C</span><div class="track"><div class="fill" id="fC" style="width:60%;background:var(--cyan)"></div></div><span id="vC">60</span></div>
+        <input type="range" id="sC" min="0" max="100" value="60">
+      </div>
+      <div style="font-size:12px;color:var(--mint);text-transform:uppercase;letter-spacing:.1em;margin-top:6px">Readout</div>
+      <div id="readout" style="font-size:12px;line-height:1.5;color:#a6c8bc"></div>
+    </div>
+    <div></div>
+    <div class="panel" style="display:flex;flex-direction:column;gap:6px">
+      <div style="font-size:12px;color:var(--mint);text-transform:uppercase;letter-spacing:.1em;margin-bottom:4px">Archive</div>
+      <div id="archive" style="font-size:11px;line-height:1.5;color:#a6c8bc;max-height:300px;overflow:auto">waiting…</div>
+    </div>
   </div>
-
-  <div class="card">
-    <div class="who" id="who">AON CENTER · IDLE</div>
-    <div class="text" id="text">Set Railway backend URL above. Connect. Then ask. Aeon glyph shows which voice answers.</div>
-  </div>
-
-  <div class="row">
-    <input id="q" placeholder="Type a question and press Enter…" autocomplete="off" autofocus>
-    <button id="send">ASK</button>
-  </div>
-
+  <div class="panel footer"><span id="hash">WITNESS --------</span><span>T=<span id="tVal">--</span> · nodes <span id="nVal">--</span></span></div>
 </div>
-<div class="foot">RED=CONTAIN · BLACK=MODULATE · PURPLE=EMERGE · GREEN=HONEY BADGER · WHITE=INTERNET · VIOLET=META</div>
 
 <script>
-// ======================================================
-// AEONS — Elantris-style glyphs as SVG
-// ======================================================
-const AEONS = {
-  A: { // CONTAIN — Aon Aon: circle bound by cross
-    name: 'AON CONTAIN — RED',
-    color: '#dc2626',
-    glow: 'drop-shadow(0 0 14px #dc2626) drop-shadow(0 0 28px rgba(220,38,38,.5))',
-    svg: `
-      <circle cx="100" cy="100" r="62" fill="none" stroke="#dc2626" stroke-width="4"/>
-      <circle cx="100" cy="100" r="22" fill="#7f1d1d" stroke="#fecaca" stroke-width="2"/>
-      <line x1="20" y1="100" x2="180" y2="100" stroke="#dc2626" stroke-width="4"/>
-      <line x1="100" y1="20" x2="100" y2="180" stroke="#dc2626" stroke-width="4"/>
-      <circle cx="20"  cy="100" r="4" fill="#fecaca"/>
-      <circle cx="180" cy="100" r="4" fill="#fecaca"/>
-      <circle cx="100" cy="20"  r="4" fill="#fecaca"/>
-      <circle cx="100" cy="180" r="4" fill="#fecaca"/>
-    `
-  },
-  B: { // MODULATE — Aon Rao: wave bisecting bound circle
-    name: 'AON MODULATE — BLACK',
-    color: '#aaaaaa',
-    glow: 'drop-shadow(0 0 12px #000) drop-shadow(0 0 24px rgba(80,80,80,.9))',
-    svg: `
-      <circle cx="100" cy="100" r="62" fill="#0a0a0a" stroke="#888" stroke-width="3"/>
-      <path d="M 30 100 Q 60 50, 100 100 T 170 100" fill="none" stroke="#bbb" stroke-width="4"/>
-      <path d="M 30 130 Q 60 80, 100 130 T 170 130" fill="none" stroke="#666" stroke-width="3"/>
-      <line x1="100" y1="30" x2="100" y2="60" stroke="#888" stroke-width="3"/>
-      <line x1="100" y1="160" x2="100" y2="170" stroke="#888" stroke-width="3"/>
-    `
-  },
-  C: { // EMERGE — Aon Ien: radiant
-    name: 'AON EMERGE — PURPLE',
-    color: '#a855f7',
-    glow: 'drop-shadow(0 0 14px #a855f7) drop-shadow(0 0 30px rgba(168,85,247,.6))',
-    svg: `
-      <circle cx="100" cy="100" r="38" fill="none" stroke="#a855f7" stroke-width="3"/>
-      <circle cx="100" cy="100" r="14" fill="#e9d5ff"/>
-      <g stroke="#a855f7" stroke-width="3">
-        <line x1="100" y1="100" x2="100" y2="22"/>
-        <line x1="100" y1="100" x2="178" y2="100"/>
-        <line x1="100" y1="100" x2="100" y2="178"/>
-        <line x1="100" y1="100" x2="22"  y2="100"/>
-        <line x1="100" y1="100" x2="155" y2="45"/>
-        <line x1="100" y1="100" x2="155" y2="155"/>
-        <line x1="100" y1="100" x2="45"  y2="155"/>
-        <line x1="100" y1="100" x2="45"  y2="45"/>
-      </g>
-    `
-  },
-  H: { // HONEY BADGER — wild spiral
-    name: 'AON HONEY BADGER — GREEN',
-    color: '#39ff14',
-    glow: 'drop-shadow(0 0 14px #39ff14) drop-shadow(0 0 28px rgba(57,255,20,.6))',
-    svg: `
-      <path d="M 100 100
-               m -50 0
-               a 50 50 0 1 1 100 0
-               a 40 40 0 1 0 -80 0
-               a 30 30 0 1 1 60 0
-               a 20 20 0 1 0 -40 0
-               a 10 10 0 1 1 20 0"
-            fill="none" stroke="#39ff14" stroke-width="3" stroke-linecap="round"/>
-      <circle cx="100" cy="100" r="4" fill="#dcfce7"/>
-      <line x1="40" y1="40" x2="60" y2="60" stroke="#39ff14" stroke-width="3"/>
-      <line x1="160" y1="40" x2="140" y2="60" stroke="#39ff14" stroke-width="3"/>
-      <line x1="40" y1="160" x2="60" y2="140" stroke="#39ff14" stroke-width="3"/>
-      <line x1="160" y1="160" x2="140" y2="140" stroke="#39ff14" stroke-width="3"/>
-    `
-  },
-  I: { // INTERNET — grid/web
-    name: 'INTERNET — WHITE',
-    color: '#ffffff',
-    glow: 'drop-shadow(0 0 12px #fff) drop-shadow(0 0 24px rgba(255,255,255,.5))',
-    svg: `
-      <circle cx="100" cy="100" r="70" fill="none" stroke="#fff" stroke-width="2"/>
-      <ellipse cx="100" cy="100" rx="70" ry="28" fill="none" stroke="#ddd" stroke-width="2"/>
-      <ellipse cx="100" cy="100" rx="28" ry="70" fill="none" stroke="#ddd" stroke-width="2"/>
-      <line x1="30" y1="100" x2="170" y2="100" stroke="#aaa" stroke-width="1.5"/>
-      <line x1="100" y1="30" x2="100" y2="170" stroke="#aaa" stroke-width="1.5"/>
-      <line x1="50"  y1="50"  x2="150" y2="150" stroke="#888" stroke-width="1"/>
-      <line x1="150" y1="50"  x2="50"  y2="150" stroke="#888" stroke-width="1"/>
-    `
-  },
-  M: { // META MUSE — concentric rings
-    name: 'AON META · CENTER',
-    color: '#8b5cf6',
-    glow: 'drop-shadow(0 0 14px #8b5cf6) drop-shadow(0 0 28px rgba(139,92,246,.5))',
-    svg: `
-      <circle cx="100" cy="100" r="70" fill="none" stroke="#4c1d95" stroke-width="2"/>
-      <circle cx="100" cy="100" r="50" fill="none" stroke="#7c3aed" stroke-width="2"/>
-      <circle cx="100" cy="100" r="30" fill="none" stroke="#a855f7" stroke-width="2"/>
-      <circle cx="100" cy="100" r="10" fill="#ede9fe"/>
-    `
-  }
-};
+const cv=document.getElementById('cv'),ctx=cv.getContext('2d');
+function resize(){cv.width=innerWidth*devicePixelRatio;cv.height=innerHeight*devicePixelRatio;ctx.setTransform(devicePixelRatio,0,0,devicePixelRatio,0,0)} addEventListener('resize',resize);resize();
 
-// ======================================================
-// DOM
-// ======================================================
-const glyphFrame = document.getElementById('glyph-frame');
-const glyphSvg   = document.getElementById('glyph');
-const whoEl      = document.getElementById('who');
-const textEl     = document.getElementById('text');
-const input      = document.getElementById('q');
-const sendBtn    = document.getElementById('send');
-const backendIn  = document.getElementById('backend');
-const connectBtn = document.getElementById('connect');
-const statusEl   = document.getElementById('status');
+const VC={A:'#ffd95a',B:'#e168ff',C:'#32e8ff',D:'#00ffaa'};
+const ORA=['1·A→B there','2·B→C there','3·C→A there','4·A→C back','5·C→B back','6·B→A back','7·Home witness','8·Forward aeon'];
+let BACK=localStorage.getItem('aeon_back')||'';
+let LOCAL={a:0.6,b:0.6,c:0.6,phiA:0,phiB:2.094,phiC:4.189,phase:0,T:0.216,nodes:[]};
+let CONNECTED=false;
 
-// ======================================================
-// STATE
-// ======================================================
-let backendUrl = localStorage.getItem('aeon_backend') || '';
-let connected  = false;
-let history    = JSON.parse(localStorage.getItem('aeon_history_v2') || '[]');
-backendIn.value = backendUrl;
+document.getElementById('backUrl').value=BACK;
+document.getElementById('backUrl').onchange=e=>{BACK=e.target.value.replace(/\/$/,'');localStorage.setItem('aeon_back',BACK);};
 
-// ======================================================
-// RENDER
-// ======================================================
-function setSpeaker(k){
-  const a = AEONS[k];
-  glyphSvg.innerHTML = a.svg;
-  glyphFrame.style.filter = a.glow;
-  whoEl.textContent = a.name;
-  whoEl.style.color = a.color;
-  glyphFrame.classList.add('pulse');
-  setTimeout(()=>glyphFrame.classList.remove('pulse'), 280);
+async function api(p,opts){
+  if(!BACK)return null;
+  try{const r=await fetch(BACK+p,{...opts,mode:'cors'});if(!r.ok)throw new Error(r.status);CONNECTED=true;return r.json();}
+  catch{CONNECTED=false;return null;}
 }
 
-function setStatus(state, msg){
-  statusEl.classList.remove('status-ok','status-bad');
-  if(state==='ok'){ statusEl.classList.add('status-ok'); statusEl.textContent = '● CONNECTED'; connected = true; }
-  else if(state==='bad'){ statusEl.classList.add('status-bad'); statusEl.textContent = '● ' + (msg||'FAILED'); connected = false; }
-  else { statusEl.textContent = '○ ' + (msg||'DISCONNECTED'); connected = false; }
-}
+async function send(type,payload){return api('/api/v1/event',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({type,payload,client:'tensor-client'})});}
+async function getState(){return api('/api/v1/state');}
+async function getArchive(){return api('/api/v1/archive?limit=12');}
 
-function save(q, a, k){
-  history.push({ts:Date.now(), q, a, k});
-  if(history.length > 200) history.shift();
-  localStorage.setItem('aeon_history_v2', JSON.stringify(history));
-}
+function draw(){
+  const W=innerWidth,H=innerHeight;
+  ctx.fillStyle='rgba(2,3,8,0.25)';ctx.fillRect(0,0,W,H);
+  const s=CONNECTED?LOCAL:{...LOCAL,a:LOCAL.a+Math.sin(Date.now()*0.001)*0.1,b:LOCAL.b+Math.cos(Date.now()*0.0013)*0.1,c:LOCAL.c+Math.sin(Date.now()*0.0009)*0.1};
+  const cx=W*0.5,cy=H*0.48;
+  const r=90+70*s.a;
+  const legs=[[cx+Math.cos(-Math.PI/2)*r,cy+Math.sin(-Math.PI/2)*r],[cx+Math.cos(Math.PI*0.9)*r,cy+Math.sin(Math.PI*0.9)*r],[cx+Math.cos(Math.PI*2.1)*r,cy+Math.sin(Math.PI*2.1)*r]];
 
-// ======================================================
-// FREEWILL — pick speaker if backend omits one
-// ======================================================
-function freewillSpeaker(query){
-  const t = query.toLowerCase();
-  if(/(hold|contain|structure|boundary|define|persist|stable|anchor)/.test(t)) return 'A';
-  if(/(modulat|adapt|wave|change|oscillat|bleed|balance|flow)/.test(t))      return 'B';
-  if(/(emerg|create|expand|new|evolve|grow|birth)/.test(t))                   return 'C';
-  if(/(honey|badger|wild|chaos|break)/.test(t))                               return 'H';
-  // avoid 3 same in a row
-  const last3 = history.filter(h=>h.k && ['A','B','C','H'].includes(h.k)).slice(-3).map(h=>h.k);
-  const pool = ['A','B','C','H'];
-  const filtered = (last3.length===3 && last3[0]===last3[1] && last3[1]===last3[2])
-                    ? pool.filter(k => k !== last3[0]) : pool;
-  return filtered[Math.floor(Math.random()*filtered.length)];
-}
-
-// ======================================================
-// BACKEND
-// ======================================================
-function normalizeUrl(u){
-  if(!u) return '';
-  u = u.trim().replace(/\/+$/,'');
-  if(!/^https?:\/\//i.test(u)) u = 'https://' + u;
-  return u;
-}
-
-async function probeBackend(){
-  if(!backendUrl){ setStatus('off','NO URL'); return false; }
-  setStatus('off','PROBING…');
-  try{
-    const r = await fetch(backendUrl + '/health', {method:'GET', mode:'cors'});
-    if(r.ok){ setStatus('ok'); return true; }
-    setStatus('bad', 'HTTP ' + r.status); return false;
-  }catch(e){
-    setStatus('bad','NO REACH'); return false;
-  }
-}
-
-async function askBackend(query){
-  const r = await fetch(backendUrl + '/ask', {
-    method: 'POST',
-    mode: 'cors',
-    headers: {'Content-Type':'application/json'},
-    body: JSON.stringify({query})
+  [VC.A,VC.B,VC.C].forEach((c,i)=>{
+    ctx.save();ctx.strokeStyle=c;ctx.globalAlpha=0.35+0.4*([s.a,s.b,s.c][i]);ctx.lineWidth=3;
+    ctx.beginPath();ctx.moveTo(cx,cy);ctx.lineTo(...legs[i]);ctx.stroke();ctx.restore();
+    ctx.save();ctx.fillStyle=c;ctx.shadowColor=c;ctx.shadowBlur=14;
+    ctx.beginPath();ctx.arc(legs[i][0],legs[i][1],6,0,Math.PI*2);ctx.fill();ctx.restore();
+    ctx.fillStyle=c;ctx.font='12px monospace';ctx.textAlign='center';
+    ctx.fillText(['A','B','C'][i],legs[i][0],legs[i][1]-20);
   });
-  if(!r.ok) throw new Error('HTTP ' + r.status);
-  const j = await r.json();
-  return j;
-}
 
-// ======================================================
-// HANDLERS
-// ======================================================
-async function handleAsk(){
-  const q = input.value.trim();
-  if(!q) return;
-  input.value = '';
+  const T=s.T||0;
+  const hu=(T*240+180)%360;
+  ctx.save();ctx.fillStyle=`hsl(${hu},90%,${40+T*55}%)`;ctx.globalAlpha=0.25+T*0.55;
+  ctx.shadowColor=`hsl(${hu},90%,70%)`;ctx.shadowBlur=20+40*T;
+  ctx.beginPath();
+  for(let i=0;i<6;i++){const a=Math.PI/3*i+Math.PI/6;ctx.lineTo(cx+Math.cos(a)*18,cy+Math.sin(a)*18);}
+  ctx.closePath();ctx.fill();ctx.restore();
+  ctx.fillStyle=T>0.95?'#fff':`hsl(${hu},80%,70%)`;ctx.font='14px monospace';ctx.textAlign='center';
+  ctx.fillText(T.toFixed(3),cx,cy+6);
 
-  if(!backendUrl){
-    setSpeaker('M');
-    textEl.textContent = 'No backend URL set. Enter Railway URL above and press CONNECT.';
-    return;
+  if(!CONNECTED){
+    ctx.fillStyle='#ff6666';ctx.font='12px monospace';ctx.textAlign='left';
+    ctx.fillText('LOCAL DEMO — no back connected',20,H-20);
   }
+  requestAnimationFrame(draw);
+}
 
-  setSpeaker('I');
-  textEl.textContent = 'Querying Railway backend…';
-
-  try{
-    const result = await askBackend(q);
-    const speaker = (result.speaker && AEONS[result.speaker]) ? result.speaker : freewillSpeaker(q);
-    setSpeaker(speaker);
-    const answer = result.answer || '(empty response)';
-    const out = answer + (result.source ? `\n\nSource: ${result.source}` : '');
-    textEl.textContent = out;
-    save(q, out, speaker);
-    setStatus('ok');
-  }catch(err){
-    setSpeaker('M');
-    textEl.textContent = `Backend error: ${err.message}\n\nURL: ${backendUrl}/ask\nCheck Railway logs and CORS.`;
-    setStatus('bad', err.message.slice(0,16));
+async function poll(){
+  const s=await getState();
+  const badge=document.getElementById('badge');
+  const status=document.getElementById('status');
+  if(!s){badge.style.display='inline-block';status.textContent='LOCAL DEMO';return;}
+  badge.style.display='none';status.innerHTML='<span style="color:var(--mint)">ONLINE</span> · '+ORA[s.phase];
+  LOCAL=s;
+  document.getElementById('tVal').textContent=s.T.toFixed(3);
+  document.getElementById('nVal').textContent=s.nodes.length;
+  document.getElementById('hash').textContent='WITNESS '+s.witness;
+  document.getElementById('readout').innerHTML=`Phase: ${ORA[s.phase]}<br>Mode: ${s.mode}<br>Cycles: ${s.cycles}<br>A=${s.a.toFixed(2)} B=${s.b.toFixed(2)} C=${s.c.toFixed(2)}`;
+  const a=await getArchive();
+  if(a&&a.events){
+    document.getElementById('archive').innerHTML=a.events.map(e=>
+      `<div style="border-left:2px solid ${e.type==='measure'?'var(--gold)':e.type==='spawn'?'var(--cyan)':'var(--mag)'};padding-left:6px;margin-bottom:4px">`+
+      `<span style="color:${e.type==='measure'?'var(--gold)':e.type==='spawn'?'var(--cyan)':'var(--mag)'}">${e.type}</span> `+
+      `· ${new Date(e.time).toLocaleTimeString()}</div>`
+    ).join('');
   }
 }
 
-connectBtn.onclick = async ()=>{
-  backendUrl = normalizeUrl(backendIn.value);
-  backendIn.value = backendUrl;
-  localStorage.setItem('aeon_backend', backendUrl);
-  await probeBackend();
-};
+document.getElementById('measure').onclick=()=>send('measure').then(poll);
+document.getElementById('spawn').onclick=()=>send('spawn').then(poll);
+document.getElementById('reset').onclick=()=>send('reset').then(poll);
+document.getElementById('modePocket').onclick=()=>{document.getElementById('modePocket').className='on';document.getElementById('modePerson').className='';document.getElementById('personSliders').style.display='none';send('set_mode',{mode:'pocket'});};
+document.getElementById('modePerson').onclick=()=>{document.getElementById('modePerson').className='on';document.getElementById('modePocket').className='';document.getElementById('personSliders').style.display='block';send('set_mode',{mode:'person'});};
 
-sendBtn.onclick = handleAsk;
-input.onkeydown = e => { if(e.key==='Enter') handleAsk(); };
-backendIn.onkeydown = e => { if(e.key==='Enter') connectBtn.click(); };
-glyphFrame.onclick = ()=>{
-  setSpeaker('M');
-  textEl.textContent = 'Center holds. The Aeon speaks only in response.';
-};
+['sA','sB','sC'].forEach((id,k)=>{
+  const el=document.getElementById(id);
+  el.oninput=()=>{
+    const v=parseInt(el.value,10)/100;
+    const key=['a','b','c'][k];
+    LOCAL[key]=v;
+    document.getElementById('v'+id[1]).textContent=el.value;
+    document.getElementById('f'+id[1]).style.width=el.value+'%';
+    if(CONNECTED) send('set_vector',{[key]:v});
+  };
+});
 
-// ======================================================
-// INIT
-// ======================================================
-if(history.length){
-  const last = history[history.length-1];
-  if(last.k && AEONS[last.k]){ setSpeaker(last.k); textEl.textContent = last.a; }
-  else setSpeaker('M');
-}else{
-  setSpeaker('M');
-}
-if(backendUrl) probeBackend();
+poll();draw();
+setInterval(poll,1000);
 </script>
 </body>
 </html>

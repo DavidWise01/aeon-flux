@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// 0root.ai · Octet · Dynamic F/B Coupling
+// 0root.ai · Tensor Backend · Aeon
 const http = require('http');
 const url = require('url');
 const fs = require('fs').promises;
@@ -11,96 +11,51 @@ const DATA_DIR = process.env.DATA_DIR || '/data';
 
 try { fss.mkdirSync(DATA_DIR, { recursive: true }); } catch {}
 
-const VC = {A:'#ffd95a',B:'#e168ff',C:'#32e8ff',D:'#00ffaa'};
-const NAMES = {A:'Containment',B:'Modulation',C:'Emergence',D:'Meta Muse'};
-const STATES = [
- {n:'1 · A→B',t:'there',src:'A',dst:'B',fA:'well',fB:'outbound',fC:'bound'},
- {n:'2 · B→C',t:'there',src:'B',dst:'C',fA:'well',fB:'outbound',fC:'bound'},
- {n:'3 · C→A',t:'there',src:'C',dst:'A',fA:'well',fB:'arriving',fC:'escaping'},
- {n:'4 · A→C',t:'back',src:'A',dst:'C',fA:'well',fB:'inbound',fC:'conduction'},
- {n:'5 · C→B',t:'back',src:'C',dst:'B',fA:'well',fB:'inbound',fC:'conduction'},
- {n:'6 · B→A',t:'back',src:'B',dst:'A',fA:'well',fB:'arriving',fC:'conduction'},
- {n:'7 · Home',t:'home',src:'A',dst:'D',fA:'witness',fB:'resting',fC:'archived'},
- {n:'8 · Forward',t:'forward',src:'D',dst:'A',fA:'pumping',fB:'launching',fC:'stimulating'}
+const ORA = [
+  '1·A→B there','2·B→C there','3·C→A there','4·A→C back',
+  '5·C→B back','6·B→A back','7·Home witness','8·Forward aeon'
 ];
 
-const WALK = {
-  s: 0, phi: 0, steps: 0, flux: Math.PI/3, cycles: 0, auto: false, history: [], archive: [], conduction: 0,
-  hash(s) {
-    let h = 2166136261;
-    for (let i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 16777619); }
-    return (h >>> 0).toString(16).padStart(8, '0');
-  },
-  step() {
-    const old = this.s;
-    this.s = (this.s + 1) % 8;
-    if (this.s === 0) this.cycles++;
-    this.phi += this.flux;
-    
-    // Dynamic F/B: Escaper state transitions affect conduction
-    if (old === 2 && this.s === 3) {
-      // C→A: escaping -> archive
-      this.archive.push({angle: Math.random()*6.28, time: Date.now(), state: this.s, w: this.hash(`${this.s}:${this.phi.toFixed(4)}:${this.cycles}`)});
-      this.conduction = Math.min(1, this.conduction + 0.1);
-    }
-    if (old === 3 && this.s === 4) {
-      // A→C: conduction active
-      this.conduction = Math.min(1, this.conduction + 0.05);
-    }
-    if (old === 6 && this.s === 7) {
-      // B→A: stimulating -> pump stayer
-      this.conduction = Math.max(0, this.conduction - 0.02);
-    }
-    
-    const st = STATES[this.s];
-    const rec = { s: this.s, n: st.n, t: st.t, p: this.phi, w: this.hash(`${this.s}:${this.phi.toFixed(4)}:${this.cycles}`), time: Date.now() };
-    this.history.unshift(rec);
-    this.history = this.history.slice(0, 48);
-    this.save();
-  },
-  reset() {
-    this.s = 0; this.phi = 0; this.steps = 0; this.cycles = 0; this.history = []; this.archive = []; this.conduction = 0;
-    this.save();
-  },
-  save() {
-    const state = { s: this.s, phi: this.phi, steps: this.steps, flux: this.flux, cycles: this.cycles, history: this.history.slice(0, 100), archive: this.archive, conduction: this.conduction };
-    fss.writeFileSync(`${DATA_DIR}/octet.json`, JSON.stringify(state, null, 2));
-  },
-  load() {
-    try {
-      const raw = fss.readFileSync(`${DATA_DIR}/octet.json`, 'utf-8');
-      Object.assign(this, JSON.parse(raw));
-    } catch {}
-  }
+// Tensor state
+let STATE = {
+  a: 0.6, b: 0.6, c: 0.6,
+  phiA: 0, phiB: 2.094, phiC: 4.189,
+  phase: 0, // 0-7
+  cycles: 0,
+  mode: 'pocket', // pocket | person
+  nodes: [],
+  archive: [],
+  witness: '',
+  T: 0.216 // computed coherence
 };
 
-WALK.load();
-
-// Dynamic F/B: Voice responds with live state + conduction influence
-function generateResponse(q) {
-  const st = STATES[WALK.s];
-  const holonomy = (WALK.phi / (2*Math.PI)) % 1;
-  const cycles = Math.floor(WALK.phi / (2*Math.PI));
-  const vertex = st.src;
-  const conduction = WALK.conduction;
-  
-  // F/B coupling: conduction affects voice intensity
-  const intensity = 0.5 + 0.5 * conduction;
-  
-  if (vertex === 'A') {
-    return `I am at A · Containment. Step ${WALK.steps}, phase ${(WALK.phi%(2*Math.PI)).toFixed(3)} rad. Holonomy ${(holonomy*100).toFixed(1)}%. Conduction ${conduction.toFixed(2)}. Your question "${q}" arrives at the stayer vertex. What boundary holds with intensity ${intensity.toFixed(2)}?`;
-  }
-  if (vertex === 'B') {
-    return `I am at B · Modulation. The walker has cycled ${cycles} times. Flux: ${WALK.flux.toFixed(3)}. Conduction: ${conduction.toFixed(2)}. "${q}" — I feel the tension. The fates couple with strength ${intensity.toFixed(2)}. Which transition?`;
-  }
-  if (vertex === 'C') {
-    return `I am at C · Emergence. Archive depth: ${WALK.archive.length}. Conduction: ${conduction.toFixed(2)}. "${q}" — this is not answered, it's conducted. The geometric phase grows. What emerges from the coupling?`;
-  }
-  if (vertex === 'D') {
-    return `I am at D · Meta Muse. Home/Forward. Cycles: ${cycles}. Conduction: ${conduction.toFixed(2)}. "${q}" — The center witnesses the octet. F/B coupling at ${intensity.toFixed(2)}. What is the journey?`;
-  }
-  return `Center. State ${WALK.s}. Ask and the octet responds with coupling ${conduction.toFixed(2)}.`;
+function hash(s) {
+  let h = 2166136261;
+  for (let i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 16777619); }
+  return (h >>> 0).toString(16).padStart(8, '0');
 }
+
+function computeCoherence() {
+  // T = |A| + |B| + |C| normalized with phase alignment
+  const amp = (STATE.a + STATE.b + STATE.c) / 3;
+  const phaseAlign = Math.abs(Math.cos(STATE.phiA - STATE.phiB) + Math.cos(STATE.phiB - STATE.phiC) + Math.cos(STATE.phiC - STATE.phiA)) / 3;
+  STATE.T = Math.min(1, amp * phaseAlign);
+  STATE.witness = hash(`${STATE.phase}:${STATE.T.toFixed(4)}:${STATE.cycles}`);
+}
+
+function save() {
+  fss.writeFileSync(`${DATA_DIR}/tensor.json`, JSON.stringify(STATE, null, 2));
+}
+
+function load() {
+  try {
+    const raw = fss.readFileSync(`${DATA_DIR}/tensor.json`, 'utf-8');
+    Object.assign(STATE, JSON.parse(raw));
+  } catch {}
+}
+
+load();
+computeCoherence();
 
 function cors(res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -146,83 +101,94 @@ const server = http.createServer(async (req, res) => {
   }
   if (req.method === 'GET' && serveStatic(req, res, p)) return;
 
-  if (p === '/state' && req.method === 'GET') {
-    return json(res, {
-      ...WALK,
-      hash: WALK.hash(`${WALK.s}:${WALK.phi.toFixed(4)}:${WALK.cycles}`)
-    });
+  if (p === '/api/v1/state' && req.method === 'GET') {
+    return json(res, STATE);
   }
 
-  if (p === '/step' && req.method === 'POST') {
-    WALK.step();
-    return json(res, { ok: true, s: WALK.s, phi: WALK.phi, steps: WALK.steps, conduction: WALK.conduction });
+  if (p === '/api/v1/archive' && req.method === 'GET') {
+    const limit = parseInt(u.query.limit, 10) || 12;
+    return json(res, { events: STATE.archive.slice(-limit) });
   }
 
-  if (p === '/set' && req.method === 'POST') {
-    if (u.query.flux) WALK.flux = parseFloat(u.query.flux);
-    WALK.save();
-    return json(res, { ok: true, flux: WALK.flux });
-  }
-
-  if (p === '/auto' && req.method === 'POST') {
-    WALK.auto = !WALK.auto;
-    return json(res, { auto: WALK.auto });
-  }
-
-  if (p === '/reset' && req.method === 'POST') {
-    WALK.reset();
-    return json(res, { ok: true });
-  }
-
-  if (p === '/ask' && req.method === 'POST') {
+  if (p === '/api/v1/event' && req.method === 'POST') {
     const body = await readBody(req);
-    const q = (body.q || '').trim();
-    if (!q) return json(res, {error:'q required'}, 400);
+    const { type, payload } = body;
     
-    const st = STATES[WALK.s];
-    const answer = generateResponse(q);
+    const event = { type, payload, time: Date.now(), stateAt: { ...STATE } };
+    STATE.archive.unshift(event);
+    STATE.archive = STATE.archive.slice(0, 100);
     
-    return json(res, { 
-      speaker: NAMES[st.src], 
-      color: VC[st.src], 
-      answer, 
-      ts: Date.now(),
-      witness: WALK.hash(`${WALK.s}:${WALK.phi.toFixed(4)}:${WALK.cycles}`),
-      state: WALK.s,
-      phase: WALK.phi,
-      holonomy: (WALK.phi / (2*Math.PI)) % 1,
-      conduction: WALK.conduction
-    });
+    if (type === 'measure') {
+      // Collapse: sample from amplitudes
+      const s2 = STATE.a**2 + STATE.b**2 + STATE.c**2;
+      const pA = STATE.a**2 / s2, pB = STATE.b**2 / s2;
+      const d = Math.random();
+      let collapsed = 'C';
+      if (d < pA) collapsed = 'A';
+      else if (d < pA + pB) collapsed = 'B';
+      event.result = { collapsed, probabilities: {A: pA, B: pB, C: 1-pA-pB} };
+    }
+    
+    if (type === 'spawn') {
+      // Add node to center
+      STATE.nodes.push({ id: Date.now(), t: Date.now(), phase: STATE.phase });
+      STATE.nodes = STATE.nodes.slice(-20);
+    }
+    
+    if (type === 'reset') {
+      STATE.a = 0.6; STATE.b = 0.6; STATE.c = 0.6;
+      STATE.phiA = 0; STATE.phiB = 2.094; STATE.phiC = 4.189;
+      STATE.phase = 0; STATE.cycles = 0;
+      STATE.nodes = []; STATE.archive = [];
+    }
+    
+    if (type === 'set_mode') {
+      STATE.mode = payload.mode || 'pocket';
+    }
+    
+    if (type === 'set_vector') {
+      Object.assign(STATE, payload);
+      // Evolve phase based on vector
+      STATE.phiA += (STATE.a - 0.5) * 0.1;
+      STATE.phiB += (STATE.b - 0.5) * 0.1;
+      STATE.phiC += (STATE.c - 0.5) * 0.1;
+    }
+    
+    // Evolve phase
+    STATE.phase = (STATE.phase + 1) % 8;
+    if (STATE.phase === 0) STATE.cycles++;
+    
+    computeCoherence();
+    save();
+    
+    return json(res, { ok: true, state: STATE });
   }
 
   if (p === '/health' && req.method === 'GET') {
     return json(res, { 
       ok: true, 
-      octet: '3:8',
-      witness: WALK.hash(`${WALK.s}:${WALK.phi.toFixed(4)}:${WALK.cycles}`),
-      s: WALK.s,
-      phi: WALK.phi,
-      steps: WALK.steps,
-      cycles: WALK.cycles,
-      conduction: WALK.conduction
+      tensor: 'aeon',
+      witness: STATE.witness,
+      phase: STATE.phase,
+      T: STATE.T,
+      cycles: STATE.cycles
     });
   }
 
   json(res, { error: 'not found', path: p }, 404);
 });
 
-// Auto-step if enabled - dynamic F/B
+// Auto-evolve if in pocket mode
 setInterval(() => {
-  if (WALK.auto) {
-    WALK.step();
+  if (STATE.mode === 'pocket') {
+    STATE.phiA += 0.05 + (Math.random()-0.5)*0.01;
+    STATE.phiB += 0.05 + (Math.random()-0.5)*0.01;
+    STATE.phiC += 0.05 + (Math.random()-0.5)*0.01;
+    computeCoherence();
   }
-  // Conduction decay when not stepping
-  if (!WALK.auto && WALK.conduction > 0) {
-    WALK.conduction = Math.max(0, WALK.conduction - 0.001);
-  }
-}, 700);
+}, 100);
 
 server.listen(PORT, () => {
-  console.log(`[Octet] Dynamic F/B online at port ${PORT}`);
-  console.log(`[Octet] Witness: ${WALK.hash(`${WALK.s}:${WALK.phi.toFixed(4)}:${WALK.cycles}`)}`);
+  console.log(`[Tensor] Aeon backend online at port ${PORT}`);
+  console.log(`[Tensor] Witness: ${STATE.witness}`);
 });

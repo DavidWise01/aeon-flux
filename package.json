@@ -1,6 +1,6 @@
 {
-  "name": "0root-ai-octet-dynamic",
-  "version": "8.0.0",
+  "name": "0root-ai-tensor",
+  "version": "9.0.0",
   "main": "server.js",
   "scripts": {
     "start": "node server.js"
