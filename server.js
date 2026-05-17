@@ -1,30 +1,35 @@
 #!/usr/bin/env node
 // 0root.ai · ABD Law Engine
-const http = require('http');
-const url = require('url');
-const fs = require('fs').promises;
-const fss = require('fs');
-const path = require('path');
+const express = require('express');
+const multer  = require('multer');
+const fs      = require('fs');
+const fsp     = require('fs').promises;
+const path    = require('path');
 
-const PORT = process.env.PORT || 3000;
-const ROOT = process.cwd();
-const DATA_DIR = process.env.DATA_DIR || '/data';
-const KB_DIR = path.join(DATA_DIR, 'kb');
+const PORT    = process.env.PORT || 3000;
+const ROOT    = process.cwd();
+const KB_DIR  = process.env.KB_DIR || '/mnt/data/kb';
 
-try { 
-  fss.mkdirSync(DATA_DIR, { recursive: true }); 
-  fss.mkdirSync(KB_DIR, { recursive: true });
-} catch {}
+// Ensure the KB directory exists on startup
+try { fs.mkdirSync(KB_DIR, { recursive: true }); } catch {}
 
+// ── Multer: store uploads directly in KB_DIR with original filename ──────────
+const storage = multer.diskStorage({
+  destination: (_req, _file, cb) => cb(null, KB_DIR),
+  filename:    (_req, file,  cb) => cb(null, file.originalname)
+});
+const upload = multer({ storage });
+
+// ── ABD walk state ────────────────────────────────────────────────────────────
 const STATES = [
- {n:'1 · A→B',t:'there',src:'A',dst:'B'},
- {n:'2 · B→C',t:'there',src:'B',dst:'C'},
- {n:'3 · C→A',t:'there',src:'C',dst:'A'},
- {n:'4 · A→C',t:'back',src:'A',dst:'C'},
- {n:'5 · C→B',t:'back',src:'C',dst:'B'},
- {n:'6 · B→A',t:'back',src:'B',dst:'A'},
- {n:'7 · Home',t:'home',src:'A',dst:'D'},
- {n:'8 · Forward',t:'forward',src:'D',dst:'A'}
+  {n:'1 · A→B',t:'there',src:'A',dst:'B'},
+  {n:'2 · B→C',t:'there',src:'B',dst:'C'},
+  {n:'3 · C→A',t:'there',src:'C',dst:'A'},
+  {n:'4 · A→C',t:'back',src:'A',dst:'C'},
+  {n:'5 · C→B',t:'back',src:'C',dst:'B'},
+  {n:'6 · B→A',t:'back',src:'B',dst:'A'},
+  {n:'7 · Home',t:'home',src:'A',dst:'D'},
+  {n:'8 · Forward',t:'forward',src:'D',dst:'A'}
 ];
 
 const WALK = {
@@ -43,95 +48,90 @@ const WALK = {
 };
 
 function readKB(file) {
-  try {
-    return fss.readFileSync(path.join(KB_DIR, file), 'utf-8');
-  } catch {
-    return null;
-  }
+  try { return fs.readFileSync(path.join(KB_DIR, file), 'utf-8'); } catch { return null; }
 }
 
-function cors(res) {
+// ── App ───────────────────────────────────────────────────────────────────────
+const app = express();
+
+app.use((_req, res, next) => {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
-}
+  next();
+});
+app.options('*', (_req, res) => res.sendStatus(204));
 
-function json(res, o, code) {
-  res.writeHead(code || 200, { 'Content-Type': 'application/json' });
-  res.end(JSON.stringify(o, null, 2));
-}
+app.use(express.json());
+app.use(express.static(path.join(ROOT, 'public')));
 
-function readBody(req) {
-  return new Promise(res => {
-    let d = ''; req.on('data', c => d += c); req.on('end', () => {
-      try { res(JSON.parse(d)); } catch { res({}); }
-    });
+// ── GET /state ────────────────────────────────────────────────────────────────
+app.get('/state', (_req, res) => {
+  res.json({
+    s:          WALK.s,
+    phi:        WALK.phi,
+    cycles:     WALK.cycles,
+    conduction: WALK.conduction,
+    T:          0.5 + 0.5 * WALK.conduction,
+    witness:    WALK.hash(`${WALK.s}:${WALK.phi.toFixed(4)}:${WALK.cycles}`)
   });
-}
-
-function serveStatic(req, res, filePath) {
-  try {
-    const fullPath = path.join(ROOT, 'public', filePath);
-    if (fss.existsSync(fullPath) && fss.statSync(fullPath).isFile()) {
-      const ext = filePath.split('.').pop();
-      const types = {html:'text/html',js:'application/javascript',css:'text/css'};
-      res.writeHead(200, {'Content-Type': types[ext] || 'text/plain'});
-      fss.createReadStream(fullPath).pipe(res);
-      return true;
-    }
-  } catch {}
-  return false;
-}
-
-const server = http.createServer(async (req, res) => {
-  cors(res);
-  if (req.method === 'OPTIONS') { res.writeHead(204); return res.end(); }
-  const u = url.parse(req.url, true);
-  const p = u.pathname;
-
-  if (req.method === 'GET' && (p === '/' || p === '/index.html')) {
-    return serveStatic(req, res, '/index.html');
-  }
-  if (req.method === 'GET' && serveStatic(req, res, p)) return;
-
-  if (p === '/state' && req.method === 'GET') {
-    return json(res, {
-      s: WALK.s,
-      phi: WALK.phi,
-      cycles: WALK.cycles,
-      conduction: WALK.conduction,
-      T: 0.5 + 0.5 * WALK.conduction,
-      witness: WALK.hash(`${WALK.s}:${WALK.phi.toFixed(4)}:${WALK.cycles}`)
-    });
-  }
-
-  if (p === '/ask' && req.method === 'POST') {
-    const body = await readBody(req);
-    const q = (body.q || '').trim();
-    if (!q) return json(res, {error:'q required'}, 400);
-    
-    const anchor = readKB('anchor.md');
-    const witness = readKB('witness.md');
-    const coherence = readKB('coherence.md');
-    const law = readKB('law.md');
-    
-    const A = anchor ? `ANCHOR loaded:\n${anchor.slice(0,200)}` : 'No anchor in /mnt/data/kb. Seed the volume.';
-    const B = witness ? `WITNESS loaded:\n${witness.slice(0,200)}` : 'No second voice in the corpus. Modulation requires plurality.';
-    const C = (anchor && witness) ? `COHERENCE synthesis:\n${coherence ? coherence.slice(0,200) : 'Anchor + Witness → Emergence'}` : 'No anchor in /mnt/data/kb. However, no second voice in the corpus.';
-    const LAW = (anchor && witness) ? `LAW consensus:\n${law ? law.slice(0,200) : '3-point synthesis ready'}` : 'No anchor in /mnt/data/kb. However, no second voice in the corpus.';
-    
-    return json(res, { A, B, C, LAW, ts: Date.now() });
-  }
-
-  if (p === '/health' && req.method === 'GET') {
-    return json(res, { ok: true, engine: 'ABD-LAW' });
-  }
-
-  json(res, { error: 'not found', path: p }, 404);
 });
 
+// ── POST /ask ─────────────────────────────────────────────────────────────────
+app.post('/ask', (req, res) => {
+  const q = (req.body.q || '').trim();
+  if (!q) return res.status(400).json({ error: 'q required' });
+
+  const anchor    = readKB('anchor.md');
+  const witness   = readKB('witness.md');
+  const coherence = readKB('coherence.md');
+  const law       = readKB('law.md');
+
+  const A   = anchor  ? `ANCHOR loaded:\n${anchor.slice(0,200)}`   : 'No anchor in /mnt/data/kb. Seed the volume.';
+  const B   = witness ? `WITNESS loaded:\n${witness.slice(0,200)}` : 'No second voice in the corpus. Modulation requires plurality.';
+  const C   = (anchor && witness) ? `COHERENCE synthesis:\n${coherence ? coherence.slice(0,200) : 'Anchor + Witness → Emergence'}` : 'No anchor in /mnt/data/kb. However, no second voice in the corpus.';
+  const LAW = (anchor && witness) ? `LAW consensus:\n${law ? law.slice(0,200) : '3-point synthesis ready'}` : 'No anchor in /mnt/data/kb. However, no second voice in the corpus.';
+
+  res.json({ A, B, C, LAW, ts: Date.now() });
+});
+
+// ── POST /upload ──────────────────────────────────────────────────────────────
+app.post('/upload', upload.array('files'), (req, res) => {
+  if (!req.files || req.files.length === 0) {
+    return res.status(400).json({ error: 'No files received' });
+  }
+  const saved = req.files.map(f => ({ name: f.originalname, size: f.size, path: f.path }));
+  res.json({ ok: true, saved });
+});
+
+// ── GET /files ────────────────────────────────────────────────────────────────
+app.get('/files', async (_req, res) => {
+  try {
+    const entries = await fsp.readdir(KB_DIR, { withFileTypes: true });
+    const files = await Promise.all(
+      entries
+        .filter(e => e.isFile())
+        .map(async e => {
+          const stat = await fsp.stat(path.join(KB_DIR, e.name));
+          return { name: e.name, size: stat.size, modified: stat.mtime };
+        })
+    );
+    res.json({ kb_dir: KB_DIR, files });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// ── GET /health ───────────────────────────────────────────────────────────────
+app.get('/health', (_req, res) => res.json({ ok: true, engine: 'ABD-LAW' }));
+
+// ── 404 fallback ──────────────────────────────────────────────────────────────
+app.use((req, res) => res.status(404).json({ error: 'not found', path: req.path }));
+
+// ── Walk ticker ───────────────────────────────────────────────────────────────
 setInterval(() => { if (WALK.auto) WALK.step(); }, 700);
 
-server.listen(PORT, () => {
+app.listen(PORT, () => {
   console.log(`[ABD] Law Engine online at port ${PORT}`);
+  console.log(`[ABD] KB directory: ${KB_DIR}`);
 });
