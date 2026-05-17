@@ -1,15 +1,9 @@
 {
-  "name": "aeon-0root",
-  "version": "1.0.0",
-  "description": "Aeon frontend + /mnt/data backend on Railway",
+  "name": "aeon-entangled",
+  "version": "2.0.0",
+  "description": "Aeon three-point entangled · /mnt/data backend · SSE ansible",
   "main": "server.js",
-  "scripts": {
-    "start": "node server.js"
-  },
-  "dependencies": {
-    "express": "^4.19.2"
-  },
-  "engines": {
-    "node": ">=18"
-  }
+  "scripts": { "start": "node server.js" },
+  "dependencies": { "express": "^4.19.2" },
+  "engines": { "node": ">=18" }
 }
