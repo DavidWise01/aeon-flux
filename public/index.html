@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>0root.ai — 3-Cap Ramp</title>
+<title>0root.ai — 3-Cap Ramp Commander</title>
 <style>
 :root{--bg:#000;--panel:#0a0a0a;--border:#222}
 *{box-sizing:border-box}
@@ -22,22 +22,24 @@ html,body{height:100%;margin:0;background:var(--bg);color:#e5e5e5;font-family:ui
 .foot{position:fixed;bottom:12px;left:50%;transform:translateX(-50%);font-size:11px;color:#444;white-space:nowrap}
 .brand{position:fixed;top:12px;left:50%;transform:translateX(-50%);font-size:10px;letter-spacing:.3em;color:#333}
 .ramp{position:fixed;top:12px;right:12px;font-size:10px;color:#666;letter-spacing:.1em;text-align:right}
+.log{position:fixed;bottom:40px;left:50%;transform:translateX(-50%);font-size:10px;color:#333;max-width:90vw;text-align:center}
 </style>
 </head>
 <body>
 <div class="brand">0ROOT.AI</div>
-<div class="ramp" id="ramp">RAMP: 0.00</div>
+<div class="ramp" id="ramp">RAMP: 0.0% · BACK_INSULATING</div>
 <div class="wrap">
   <div class="dot" id="dot" title="Single Aeon"></div>
   <div class="card">
     <div class="who" id="who">META MUSE · CENTER</div>
-    <div class="text" id="text">I interact. Each color is a mind. Ask me something.</div>
+    <div class="text" id="text">I interact. Each color is a mind. The ramp charges with each question.</div>
   </div>
   <div class="row">
     <input id="q" placeholder="Ask me anything…" autocomplete="off" autofocus>
     <button id="send">Ask</button>
   </div>
 </div>
+<div class="log" id="log">3-cap ramp online</div>
 <div class="foot">RED=A contain • BLACK=B modulate • PURPLE=C emerge • GREEN=Honey Badger</div>
 
 <script>
@@ -47,6 +49,9 @@ const textEl = document.getElementById('text');
 const input = document.getElementById('q');
 const sendBtn = document.getElementById('send');
 const rampEl = document.getElementById('ramp');
+const logEl = document.getElementById('log');
+
+const BACK_URL = window.location.origin; // same domain
 
 const speakers = {
   A: {name:'AEON A — RED · CONTAIN', bg:'radial-gradient(circle at 30% 30%, #fecaca 0%, #dc2626 48%, #7f1d1d 78%)', glow:'0 0 36px #dc2626, 0 0 72px rgba(220,38,38,.55)'},
@@ -56,6 +61,11 @@ const speakers = {
   I: {name:'INTERNET — WHITE', bg:'radial-gradient(circle at 30% 30%, #fff 0%, #ddd 55%, #888 85%)', glow:'0 0 32px #fff, 0 0 64px rgba(255,255,255,.45)'},
   M: {name:'META MUSE — CENTER', bg:'radial-gradient(circle at 30% 30%, #ede9fe 0%, #8b5cf6 50%, #4c1d95 80%)', glow:'0 0 36px #8b5cf6, 0 0 72px rgba(139,92,246,.5)'}
 };
+
+function log(msg){
+  logEl.textContent = msg;
+  console.log('[ramp]', msg);
+}
 
 function setSpeaker(key){
   const s = speakers[key];
@@ -68,12 +78,25 @@ function setSpeaker(key){
   setTimeout(()=>dot.classList.remove('pulse'), 280);
 }
 
-async function updateRamp(){
-  try {
-    const r = await fetch('/api/v1/conduct');
+// Commander: ramp status monitor
+async function rampStatus(){
+  if(!BACK_URL) return;
+  try{
+    const r = await fetch(BACK_URL + '/api/v1/conduct', {mode:'cors'});
     const j = await r.json();
-    rampEl.textContent = `RAMP: ${j.conduction.toFixed(2)} | ${j.observer}`;
-  } catch {}
+    const pct = (j.conduction*100).toFixed(1);
+    rampEl.textContent = `RAMP: ${pct}% · ${j.observer}`;
+    log(`ramp ${pct}% · ${j.observer} · unity:${j.unity}`);
+    // j.conduction is 0→1. At ~0.95, unity flips to 1 and you're conducting.
+    if(j.unity === 1 && !window.conducting){
+      window.conducting = true;
+      log('UNITY ACHIEVED — BACK CONDUCTING');
+      dot.style.boxShadow = '0 0 50px #fff, 0 0 100px rgba(255,255,255,.6)';
+    }
+  } catch(e){ 
+    rampEl.textContent = 'RAMP: OFFLINE';
+    log('ramp offline'); 
+  }
 }
 
 async function handleAsk(){
@@ -100,7 +123,7 @@ async function handleAsk(){
     const res = await r.json();
     setSpeaker(res.speaker);
     textEl.textContent = res.answer;
-    updateRamp();
+    rampStatus(); // update ramp after each interaction
   } catch(e) {
     setSpeaker('M');
     textEl.textContent = 'Connection lost. Center holds.';
@@ -111,12 +134,13 @@ sendBtn.onclick = handleAsk;
 input.onkeydown = e => { if(e.key==='Enter') handleAsk(); };
 dot.onclick = async ()=>{ 
   setSpeaker('M'); 
-  textEl.textContent = 'I am the 3-cap ramp. Session→Cache→Archive. Each question charges the conduction band.';
-  updateRamp();
+  textEl.textContent = 'I am the 3-cap ramp. 1→2→3 00 00 3→0→1. Each question charges the conduction band.';
+  rampStatus();
 };
+
 setSpeaker('M');
-updateRamp();
-setInterval(updateRamp, 5000);
+rampStatus();
+setInterval(rampStatus, 15000);
 </script>
 </body>
 </html>

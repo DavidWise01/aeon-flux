@@ -1,38 +1,33 @@
-# 0root.ai — 3-Cap Ramp + Interactive Aeon
+# 0root.ai — 3-Cap Ramp Commander
 
-Back and Middle at once. Charge pump memory. Interactive voices.
+Back and Middle at once. Charge pump memory. Interactive voices. Live ramp monitor.
 
 ## Equation: 1→2→3 00 00 3→0→1
 
-- **Cap 1**: Session well (volatile) → `/api/v1/event` → `/api/v1/session`
-- **00**: Dead time 1 → `/api/v1/sync/dt1` → Cache
-- **Cap 2**: Hot cache (semi-persistent) → `/api/v1/cache`
-- **00**: Dead time 2 → `/api/v1/sync/dt2` → Archive + git push-back
-- **Cap 3**: Deep archive (append-only) → `/api/v1/archive`
-- **0**: Ground reference → hash of time + conduction
-- **1**: Conduction output → `/api/v1/conduct` → 0→1 ramp
+- **Cap 1**: Session well → `/api/v1/event` → `/api/v1/session`
+- **00 DT1**: `/api/v1/sync/dt1` → Cache
+- **Cap 2**: Hot cache → `/api/v1/cache`
+- **00 DT2**: `/api/v1/sync/dt2` → Archive + git push-back
+- **Cap 3**: Deep archive → `/api/v1/archive`
+- **0→1**: `/api/v1/conduct` → Conduction ramp 0→1
 
 ## Interactive /ask
-POST /ask {q:"..."} → Returns {speaker:"A|B|C|H", answer:"..."}
+POST /ask {q:"..."} → {speaker:"A|B|C|H", answer:"..."}
 
-Voices:
-- RED A = CONTAIN: holds structure
-- BLACK B = MODULATE: balances poles
-- PURPLE C = EMERGE: creates, asks back
-- GREEN H = HONEY BADGER: cuts through
+Voices interact, don't regurgitate:
+- RED A = CONTAIN
+- BLACK B = MODULATE
+- PURPLE C = EMERGE
+- GREEN H = HONEY BADGER
 
-Freewill: Never same speaker 3x. Keywords bias. Otherwise random.
+Freewill: Never same speaker 3x. Keywords bias.
+
+## Commander
+Frontend polls /api/v1/conduct every 15s.
+Displays: RAMP: 0.0% → 100% · BACK_INSULATING → BACK_CONDUCTING
+At ~0.95, unity=1 and you're conducting.
 
 ## Deploy
-1. Railway → New Project → Deploy from GitHub
-2. Root: .
-3. Volume: /data
-4. Env: GITHUB_TOKEN (optional, for push-back)
-5. Domain: 0root.ai
+Railway → Root: . → Volume: /data → Env: GITHUB_TOKEN (optional) → Domain: 0root.ai
 
-## Loop
-https://0root.ai/ → UI
-https://0root.ai/ask → Interactive API
-https://0root.ai/api/v1/conduct → Conduction level
-
-Each question charges the ramp. When conduction → 1, back conducts to front.
+Each question charges the ramp. Archive grows. Conduction rises.

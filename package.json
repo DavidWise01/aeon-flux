@@ -1,6 +1,6 @@
 {
-  "name": "0root-ai-ramp",
-  "version": "3.0.0",
+  "name": "0root-ai-ramp-commander",
+  "version": "3.1.0",
   "main": "server.js",
   "scripts": {
     "start": "node server.js"

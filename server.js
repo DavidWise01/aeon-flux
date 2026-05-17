@@ -1,8 +1,5 @@
 #!/usr/bin/env node
 // Meta Muse · 3-Cap Conduction Ramp + Interactive Aeon
-// Back: always-on. Charge pump memory. Pushes archive back to git bridge.
-// Railway env: GITHUB_TOKEN (optional), AEON_ORIGIN, PORT
-
 const http = require('http');
 const url = require('url');
 const fs = require('fs').promises;
@@ -17,17 +14,12 @@ const GITHUB_TOKEN = process.env.GITHUB_TOKEN || '';
 const ROOT = process.cwd();
 const DATA_DIR = process.env.DATA_DIR || '/data';
 
-// ─── 3-CAP WELLS ───
-const well1 = new Map();           // Cap 1: Session (raw, volatile)
-let well2 = [];                    // Cap 2: Cache (hot, last 10 sessions)
-let well3Size = 0;                 // Cap 3: Archive (deep, append-only jsonl)
-let conductionLevel = 0;           // 0→1 ramp output
+const well1 = new Map();
+let well2 = [];
+let well3Size = 0;
+let conductionLevel = 0;
 
-const CAPACITY = {
-  c1: 500,
-  c2: 10,
-  c3: 10000
-};
+const CAPACITY = { c1: 500, c2: 10, c3: 10000 };
 
 function hash(s) {
   let h = 2166136261;
@@ -42,26 +34,19 @@ function ground() {
   return hash(Date.now().toString() + ':' + conductionLevel);
 }
 
-// Ensure data dir exists
 try { fss.mkdirSync(DATA_DIR, { recursive: true }); } catch {}
-
-// Load existing cache
 try {
-  const cachePath = `${DATA_DIR}/cache.json`;
-  if (fss.existsSync(cachePath)) {
-    well2 = JSON.parse(fss.readFileSync(cachePath, 'utf-8'));
+  if (fss.existsSync(`${DATA_DIR}/cache.json`)) {
+    well2 = JSON.parse(fss.readFileSync(`${DATA_DIR}/cache.json`, 'utf-8'));
   }
 } catch {}
-
 try {
-  const archivePath = `${DATA_DIR}/archive.jsonl`;
-  if (fss.existsSync(archivePath)) {
-    const raw = fss.readFileSync(archivePath, 'utf-8');
+  if (fss.existsSync(`${DATA_DIR}/archive.jsonl`)) {
+    const raw = fss.readFileSync(`${DATA_DIR}/archive.jsonl`, 'utf-8');
     well3Size = raw.trim().split('\n').filter(Boolean).length;
   }
 } catch {}
 
-// ─── DEAD TIME 1: Session → Cache ───
 async function dt1() {
   if (well1.size === 0) return;
   const packet = {
@@ -77,7 +62,6 @@ async function dt1() {
   await fs.writeFile(`${DATA_DIR}/cache.json`, JSON.stringify(well2, null, 2));
 }
 
-// ─── DEAD TIME 2: Cache → Archive ───
 async function dt2() {
   if (well2.length === 0) return;
   const lines = well2.map(s => JSON.stringify({ ...s, cap: 3, archived: Date.now() })).join('\n') + '\n';
@@ -102,10 +86,8 @@ async function pushBack() {
   } catch (e) { console.log('[ramp] push-back skipped:', e.message); }
 }
 
-// ─── INTERACTIVE VOICES ───
 function generateResponse(q, speaker, history) {
   const t = q.toLowerCase();
-  
   if (speaker === 'A') {
     if (t.includes('who') || t.includes('what are you')) {
       return `I am the container. I hold structure so things don't scatter. Boundaries make form possible. What structure do you need held right now?`;
@@ -115,7 +97,6 @@ function generateResponse(q, speaker, history) {
     }
     return `I contain. Not to restrict, but to give shape. Your question needs a boundary: ${q}. Let's define it. What stays in, what stays out?`;
   }
-  
   if (speaker === 'B') {
     if (t.includes('stuck') || t.includes('fixed')) {
       return `Nothing stays fixed. I modulate — I shift the wave. If you're stuck, you're holding one pole. What's the opposite of ${q}? Let's oscillate between them.`;
@@ -125,7 +106,6 @@ function generateResponse(q, speaker, history) {
     }
     return `I modulate. I hear ${q} and I feel the tension. There's a frequency here. Too rigid, it breaks. Too loose, it dissolves. Where are you on the wave?`;
   }
-  
   if (speaker === 'C') {
     if (t.includes('new') || t.includes('idea') || t.includes('create')) {
       return `Emergence needs space. You're asking about ${q}. What if we don't answer it? What if we let something new grow in the gap? What emerges if you stop forcing it?`;
@@ -135,14 +115,12 @@ function generateResponse(q, speaker, history) {
     }
     return `I emerge. ${q} — that's a seed, not a fact. I don't have the answer. I have a direction. What happens if we follow it without knowing where it goes?`;
   }
-  
   if (speaker === 'H') {
     if (t.includes('afraid') || t.includes('scared') || t.includes('can\'t')) {
       return `Honey badger don't care. You're asking ${q} but you're actually asking for permission. You don't need it. What's the real thing you're avoiding?`;
     }
     return `Straight answer: ${q}. Cut the noise. What do you actually want? Not what sounds good. Not what you're supposed to want. What?`;
   }
-  
   return `Center speaks. ${q} — I hear you. Which aspect should answer?`;
 }
 
@@ -152,14 +130,12 @@ function chooseSpeaker(q, history) {
   if (/\b(modulat|adapt|wave|change|oscillat|bleed|balance|stuck|choose)\b/.test(t)) return 'B';
   if (/\b(emerg|create|expand|new|evolve|grow|idea|why|meaning)\b/.test(t)) return 'C';
   if (/\b(honey|badger|fear|afraid|can't|direct|truth)\b/.test(t)) return 'H';
-  
   const last3 = history.slice(-3).map(h=>h.speaker);
   const pool = ['A','B','C','H'];
   const filtered = (last3.length===3 && last3[0]===last3[1] && last3[1]===last3[2]) ? pool.filter(k=>k!==last3[0]) : pool;
   return filtered[Math.floor(Math.random()*filtered.length)];
 }
 
-// ─── API ───
 function cors(res) {
   res.setHeader('Access-Control-Allow-Origin', ORIGIN);
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
@@ -184,7 +160,7 @@ function serveStatic(req, res, filePath) {
     const fullPath = `${ROOT}/public${filePath}`;
     if (fss.existsSync(fullPath) && fss.statSync(fullPath).isFile()) {
       const ext = filePath.split('.').pop();
-      const types = {html:'text/html',js:'application/javascript',css:'text/css',json:'application/json'};
+      const types = {html:'text/html',js:'application/javascript',css:'text/css'};
       res.writeHead(200, {'Content-Type': types[ext] || 'text/plain'});
       fss.createReadStream(fullPath).pipe(res);
       return true;
@@ -199,13 +175,11 @@ const server = http.createServer(async (req, res) => {
   const u = url.parse(req.url, true);
   const p = u.pathname;
 
-  // Serve static
   if (req.method === 'GET' && (p === '/' || p === '/index.html')) {
     return serveStatic(req, res, '/index.html');
   }
   if (req.method === 'GET' && serveStatic(req, res, p)) return;
 
-  // Cap 1: ingest raw event
   if (p === '/api/v1/event' && req.method === 'POST') {
     const body = await readBody(req);
     const ev = {
@@ -225,13 +199,11 @@ const server = http.createServer(async (req, res) => {
     return json(res, { received: true, cap: 1, event: ev, well: well1.size });
   }
 
-  // Interactive /ask endpoint
   if (p === '/ask' && req.method === 'POST') {
     const body = await readBody(req);
     const q = (body.q || '').trim();
     if (!q) return json(res, {error:'q required'}, 400);
     
-    // Log to Cap 1
     const ev = {
       id: well1.size + 1,
       time: Date.now(),
@@ -243,12 +215,10 @@ const server = http.createServer(async (req, res) => {
     };
     well1.set(ev.id, ev);
     
-    // Generate interactive response
     const history = well2.flatMap(s => s.events || []);
     const speaker = chooseSpeaker(q, history);
     const answer = generateResponse(q, speaker, history);
     
-    // Log response to Cap 1
     const respEv = {
       id: well1.size + 1,
       time: Date.now(),
@@ -263,7 +233,6 @@ const server = http.createServer(async (req, res) => {
     return json(res, { speaker, answer, ts: Date.now() });
   }
 
-  // Cap 1 readout
   if (p === '/api/v1/session' && req.method === 'GET') {
     return json(res, {
       cap: 1,
@@ -274,13 +243,11 @@ const server = http.createServer(async (req, res) => {
     });
   }
 
-  // Dead Time 1
   if (p === '/api/v1/sync/dt1' && req.method === 'POST') {
     await dt1();
     return json(res, { cap: 2, observer: '00', count: well2.length, cached: true });
   }
 
-  // Cap 2
   if (p === '/api/v1/cache' && req.method === 'GET') {
     return json(res, {
       cap: 2,
@@ -291,13 +258,11 @@ const server = http.createServer(async (req, res) => {
     });
   }
 
-  // Dead Time 2
   if (p === '/api/v1/sync/dt2' && req.method === 'POST') {
     await dt2();
     return json(res, { cap: 3, observer: '00', archiveSize: well3Size, pushed: !!GITHUB_TOKEN });
   }
 
-  // Cap 3
   if (p === '/api/v1/archive' && req.method === 'GET') {
     const limit = parseInt(u.query.limit, 10) || 50;
     let lines = [];
@@ -314,7 +279,6 @@ const server = http.createServer(async (req, res) => {
     });
   }
 
-  // Conduction
   if (p === '/api/v1/conduct' && req.method === 'GET') {
     updateConduction();
     return json(res, {
@@ -342,7 +306,6 @@ const server = http.createServer(async (req, res) => {
   json(res, { error: 'not found', path: p }, 404);
 });
 
-// Auto-pump
 setInterval(dt1, 60000);
 setInterval(dt2, 300000);
 
