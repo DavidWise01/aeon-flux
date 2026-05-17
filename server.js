@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// 0root.ai · Octet · Single Aeon with Logging
+// 0root.ai · ABD Law Engine
 const http = require('http');
 const url = require('url');
 const fs = require('fs').promises;
@@ -10,157 +10,44 @@ const PORT = process.env.PORT || 3000;
 const ROOT = process.cwd();
 const DATA_DIR = process.env.DATA_DIR || '/data';
 const KB_DIR = path.join(DATA_DIR, 'kb');
-const DIALOGUES_DIR = path.join(KB_DIR, 'dialogues');
-const ARCHIVE_DIR = path.join(KB_DIR, 'archive');
 
 try { 
   fss.mkdirSync(DATA_DIR, { recursive: true }); 
   fss.mkdirSync(KB_DIR, { recursive: true });
-  fss.mkdirSync(DIALOGUES_DIR, { recursive: true });
-  fss.mkdirSync(ARCHIVE_DIR, { recursive: true });
 } catch {}
 
-const VC = {A:'#ffd95a',B:'#e168ff',C:'#32e8ff',D:'#00ffaa'};
-const NAMES = {A:'Containment',B:'Modulation',C:'Emergence',D:'Meta Muse'};
 const STATES = [
- {n:'1 · A→B',t:'there',src:'A',dst:'B',fA:'well',fB:'outbound',fC:'bound'},
- {n:'2 · B→C',t:'there',src:'B',dst:'C',fA:'well',fB:'outbound',fC:'bound'},
- {n:'3 · C→A',t:'there',src:'C',dst:'A',fA:'well',fB:'arriving',fC:'escaping'},
- {n:'4 · A→C',t:'back',src:'A',dst:'C',fA:'well',fB:'inbound',fC:'conduction'},
- {n:'5 · C→B',t:'back',src:'C',dst:'B',fA:'well',fB:'inbound',fC:'conduction'},
- {n:'6 · B→A',t:'back',src:'B',dst:'A',fA:'well',fB:'arriving',fC:'conduction'},
- {n:'7 · Home',t:'home',src:'A',dst:'D',fA:'witness',fB:'resting',fC:'archived'},
- {n:'8 · Forward',t:'forward',src:'D',dst:'A',fA:'pumping',fB:'launching',fC:'stimulating'}
+ {n:'1 · A→B',t:'there',src:'A',dst:'B'},
+ {n:'2 · B→C',t:'there',src:'B',dst:'C'},
+ {n:'3 · C→A',t:'there',src:'C',dst:'A'},
+ {n:'4 · A→C',t:'back',src:'A',dst:'C'},
+ {n:'5 · C→B',t:'back',src:'C',dst:'B'},
+ {n:'6 · B→A',t:'back',src:'B',dst:'A'},
+ {n:'7 · Home',t:'home',src:'A',dst:'D'},
+ {n:'8 · Forward',t:'forward',src:'D',dst:'A'}
 ];
 
 const WALK = {
-  s: 0, phi: 0, steps: 0, flux: Math.PI/3, cycles: 0, auto: true, history: [], archive: [], conduction: 0,
+  s: 0, phi: 0, cycles: 0, flux: Math.PI/3, auto: true, conduction: 0,
   hash(s) {
     let h = 2166136261;
     for (let i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 16777619); }
     return (h >>> 0).toString(16).padStart(8, '0');
   },
   step() {
-    const old = this.s;
     this.s = (this.s + 1) % 8;
     if (this.s === 0) this.cycles++;
     this.phi += this.flux;
-    
-    // F/B coupling: Escaper transitions affect conduction
-    if (old === 2 && this.s === 3) {
-      // C→A: escaping -> archive
-      const escapeEvent = {angle: Math.random()*6.28, time: Date.now(), state: this.s, w: this.hash(`${this.s}:${this.phi.toFixed(4)}:${this.cycles}`)};
-      this.archive.push(escapeEvent);
-      this.conduction = Math.min(1, this.conduction + 0.1);
-      // Log to file
-      try {
-        fss.appendFileSync(path.join(ARCHIVE_DIR, 'escapes.jsonl'), JSON.stringify(escapeEvent) + '\n');
-      } catch {}
-    }
-    if (old === 3 && this.s === 4) {
-      // A→C: conduction active
-      this.conduction = Math.min(1, this.conduction + 0.05);
-    }
-    if (old === 6 && this.s === 7) {
-      // B→A: stimulating -> pump stayer
-      this.conduction = Math.max(0, this.conduction - 0.02);
-    }
-    
-    const st = STATES[this.s];
-    const rec = { s: this.s, n: st.n, t: st.t, p: this.phi, w: this.hash(`${this.s}:${this.phi.toFixed(4)}:${this.cycles}`), time: Date.now() };
-    this.history.unshift(rec);
-    this.history = this.history.slice(0, 48);
-    this.save();
-  },
-  reset() {
-    this.s = 0; this.phi = 0; this.steps = 0; this.cycles = 0; this.history = []; this.archive = []; this.conduction = 0;
-    this.save();
-  },
-  save() {
-    const state = { s: this.s, phi: this.phi, steps: this.steps, flux: this.flux, cycles: this.cycles, history: this.history.slice(0, 100), archive: this.archive, conduction: this.conduction };
-    fss.writeFileSync(path.join(DATA_DIR, 'octet.json'), JSON.stringify(state, null, 2));
-  },
-  load() {
-    try {
-      const raw = fss.readFileSync(path.join(DATA_DIR, 'octet.json'), 'utf-8');
-      Object.assign(this, JSON.parse(raw));
-    } catch {}
+    this.conduction = Math.max(0, this.conduction - 0.001);
   }
 };
 
-WALK.load();
-
-function getSpeaker() {
-  const st = STATES[WALK.s];
-  if (st.src === 'A') return 'A';
-  if (st.src === 'B') return 'B';
-  if (st.src === 'C') return 'C';
-  if (st.src === 'D') return 'M';
-  return 'M';
-}
-
-function searchKB(query) {
-  // Simple grep through .md and .json files
-  const results = [];
+function readKB(file) {
   try {
-    const files = fss.readdirSync(KB_DIR);
-    for (const file of files) {
-      if (file.endsWith('.md') || file.endsWith('.json') || file.endsWith('.txt')) {
-        const content = fss.readFileSync(path.join(KB_DIR, file), 'utf-8');
-        if (content.toLowerCase().includes(query.toLowerCase())) {
-          const lines = content.split('\n');
-          const match = lines.find(l => l.toLowerCase().includes(query.toLowerCase()));
-          if (match) results.push({file, excerpt: match.trim()});
-        }
-      }
-    }
-  } catch {}
-  return results;
-}
-
-function generateResponse(q) {
-  const st = STATES[WALK.s];
-  const speaker = getSpeaker();
-  const holonomy = (WALK.phi / (2*Math.PI)) % 1;
-  const cycles = Math.floor(WALK.phi / (2*Math.PI));
-  const intensity = 0.5 + 0.5 * WALK.conduction;
-  
-  // Search KB for context
-  const kbResults = searchKB(q);
-  const kbContext = kbResults.length > 0 ? `\n\n[From ${kbResults[0].file}: ${kbResults[0].excerpt}]` : '';
-  
-  if (speaker === 'A') {
-    return `I am A · Containment, the Stayer. Step ${WALK.steps}, phase ${(WALK.phi%(2*Math.PI)).toFixed(3)} rad. Holonomy ${(holonomy*100).toFixed(1)}%. Conduction ${WALK.conduction.toFixed(2)}. Your question "${q}" arrives at the stayer vertex with intensity ${intensity.toFixed(2)}. What boundary holds?${kbContext}`;
+    return fss.readFileSync(path.join(KB_DIR, file), 'utf-8');
+  } catch {
+    return null;
   }
-  if (speaker === 'B') {
-    return `I am B · Modulation, the Traveler. The walker has cycled ${cycles} times. Flux: ${WALK.flux.toFixed(3)}. Conduction: ${WALK.conduction.toFixed(2)}. "${q}" — I feel the tension. F/B coupling at ${intensity.toFixed(2)}. Which transition?${kbContext}`;
-  }
-  if (speaker === 'C') {
-    return `I am C · Emergence, the Escaper. Archive depth: ${WALK.archive.length}. Conduction: ${WALK.conduction.toFixed(2)}. "${q}" — this is not answered, it's conducted. F/B coupling at ${intensity.toFixed(2)}. What emerges from this path?${kbContext}`;
-  }
-  if (speaker === 'M') {
-    return `I am D · Meta Muse, the Center. Home/Forward. Cycles: ${cycles}. Conduction: ${WALK.conduction.toFixed(2)}. "${q}" — The center observes the walk. F/B coupling at ${intensity.toFixed(2)}. What is the journey?${kbContext}`;
-  }
-  return `Center. State ${WALK.s}. Ask and the octet responds.${kbContext}`;
-}
-
-function logDialogue(q, speaker, answer) {
-  const date = new Date().toISOString().split('T')[0];
-  const logFile = path.join(DIALOGUES_DIR, `${date}.jsonl`);
-  const entry = {
-    ts: Date.now(),
-    q,
-    speaker,
-    answer,
-    state: WALK.s,
-    phase: WALK.phi,
-    holonomy: (WALK.phi / (2*Math.PI)) % 1,
-    conduction: WALK.conduction,
-    witness: WALK.hash(`${WALK.s}:${WALK.phi.toFixed(4)}:${WALK.cycles}`)
-  };
-  try {
-    fss.appendFileSync(logFile, JSON.stringify(entry) + '\n');
-  } catch {}
 }
 
 function cors(res) {
@@ -209,8 +96,12 @@ const server = http.createServer(async (req, res) => {
 
   if (p === '/state' && req.method === 'GET') {
     return json(res, {
-      ...WALK,
-      hash: WALK.hash(`${WALK.s}:${WALK.phi.toFixed(4)}:${WALK.cycles}`)
+      s: WALK.s,
+      phi: WALK.phi,
+      cycles: WALK.cycles,
+      conduction: WALK.conduction,
+      T: 0.5 + 0.5 * WALK.conduction,
+      witness: WALK.hash(`${WALK.s}:${WALK.phi.toFixed(4)}:${WALK.cycles}`)
     });
   }
 
@@ -219,50 +110,28 @@ const server = http.createServer(async (req, res) => {
     const q = (body.q || '').trim();
     if (!q) return json(res, {error:'q required'}, 400);
     
-    const speaker = getSpeaker();
-    const answer = generateResponse(q);
-    logDialogue(q, speaker, answer);
+    const anchor = readKB('anchor.md');
+    const witness = readKB('witness.md');
+    const coherence = readKB('coherence.md');
+    const law = readKB('law.md');
     
-    return json(res, { 
-      speaker: speaker === 'A' ? 'A' : speaker === 'B' ? 'B' : speaker === 'C' ? 'C' : 'M',
-      answer, 
-      ts: Date.now(),
-      witness: WALK.hash(`${WALK.s}:${WALK.phi.toFixed(4)}:${WALK.cycles}`),
-      state: WALK.s,
-      phase: WALK.phi,
-      holonomy: (WALK.phi / (2*Math.PI)) % 1,
-      conduction: WALK.conduction
-    });
+    const A = anchor ? `ANCHOR loaded:\n${anchor.slice(0,200)}` : 'No anchor in /mnt/data/kb. Seed the volume.';
+    const B = witness ? `WITNESS loaded:\n${witness.slice(0,200)}` : 'No second voice in the corpus. Modulation requires plurality.';
+    const C = (anchor && witness) ? `COHERENCE synthesis:\n${coherence ? coherence.slice(0,200) : 'Anchor + Witness → Emergence'}` : 'No anchor in /mnt/data/kb. However, no second voice in the corpus.';
+    const LAW = (anchor && witness) ? `LAW consensus:\n${law ? law.slice(0,200) : '3-point synthesis ready'}` : 'No anchor in /mnt/data/kb. However, no second voice in the corpus.';
+    
+    return json(res, { A, B, C, LAW, ts: Date.now() });
   }
 
   if (p === '/health' && req.method === 'GET') {
-    return json(res, { 
-      ok: true, 
-      octet: '3:8',
-      witness: WALK.hash(`${WALK.s}:${WALK.phi.toFixed(4)}:${WALK.cycles}`),
-      s: WALK.s,
-      phi: WALK.phi,
-      steps: WALK.steps,
-      cycles: WALK.cycles,
-      conduction: WALK.conduction
-    });
+    return json(res, { ok: true, engine: 'ABD-LAW' });
   }
 
   json(res, { error: 'not found', path: p }, 404);
 });
 
-// Auto-step the octet
-setInterval(() => {
-  if (WALK.auto) {
-    WALK.step();
-  }
-  // Conduction decay when not stepping
-  if (!WALK.auto && WALK.conduction > 0) {
-    WALK.conduction = Math.max(0, WALK.conduction - 0.001);
-  }
-}, 700);
+setInterval(() => { if (WALK.auto) WALK.step(); }, 700);
 
 server.listen(PORT, () => {
-  console.log(`[Octet] Single Aeon with logging online at port ${PORT}`);
-  console.log(`[Octet] Witness: ${WALK.hash(`${WALK.s}:${WALK.phi.toFixed(4)}:${WALK.cycles}`)}`);
+  console.log(`[ABD] Law Engine online at port ${PORT}`);
 });

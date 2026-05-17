@@ -1,20 +1,14 @@
-# 0root.ai — Single Aeon · Octet with Logging
+# 0root.ai — ABD Law Engine
 
-The frontend is the single Aeon dot. The backend runs the Octet with Three Fates and logs everything.
+A/B/C/Law synthesis engine. Each voice reads its own file from /mnt/data/kb.
 
-## Logging
-- `/mnt/data/kb/dialogues/YYYY-MM-DD.jsonl` — Every Q&A pair
-- `/mnt/data/kb/archive/escapes.jsonl` — Every Escaper escape
-
-## Three Fates
-- **A · Stayer**: Containment vertex. Never leaves A.
-- **B · Traveler**: Modulation vertex. Walks the spine.
-- **C · Escaper**: Emergence vertex. Writes to archive, conducts energy.
-
-## Dynamic F/B Coupling
-Front drives Back, Back drives Front. Conduction level modulates voice intensity and visual glow.
+## Required Files
+- `anchor.md` — Voice A loads this
+- `witness.md` — Voice B loads this  
+- `coherence.md` — Voice C synthesizes both
+- `law.md` — Law panel checks consensus
 
 ## Deploy
 Railway → Root: . → Volume: /data → Domain: 0root.ai
 
-The Aeon remembers. Every answer is logged with exact octet state.
+Seed /mnt/data/kb/ with the 4 .md files or the engine will show "No anchor" errors.

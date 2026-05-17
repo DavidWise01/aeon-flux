@@ -3,310 +3,145 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>AEON · ENTANGLED · 0root.ai</title>
+<title>0root.ai — ABD Law Engine</title>
 <style>
-:root{--bg:#000;--panel:#0a0a0a;--border:#222;--ink:#e5e5e5;--dim:#666}
-*{box-sizing:border-box}
-html,body{height:100%;margin:0;background:var(--bg);color:var(--ink);font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
-.wrap{min-height:100%;display:flex;flex-direction:column;align-items:center;gap:14px;padding:20px 16px 80px}
-
-.topbar{
-  width:min(900px,96vw);display:flex;justify-content:space-between;align-items:center;
-  font-size:11px;letter-spacing:.14em;color:#666;
-}
-.nodes{color:#39ff14}
-.nodes.idle{color:#666}
-
-/* TRIAD */
-.triad{
-  width:min(520px,92vw);
-  aspect-ratio: 1 / 0.92;
-  position:relative;
-}
-.triad svg{position:absolute;inset:0;width:100%;height:100%}
-.glyph{position:absolute;width:120px;height:120px;display:flex;align-items:center;justify-content:center;transition:filter .35s,transform .35s}
-.glyph svg{width:100%;height:100%}
-.glyph.fired{transform:scale(1.12)}
-.glyph.dim{filter:grayscale(0.6) brightness(.4) !important}
-
-#g-A{ top:0;       left:50%; transform:translateX(-50%); }
-#g-A.fired{ transform:translateX(-50%) scale(1.12); }
-#g-B{ bottom:0;    left:0; }
-#g-C{ bottom:0;    right:0; }
-
-.law-tag{
-  position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);
-  font-size:10px;letter-spacing:.2em;color:#444;text-align:center;line-height:1.5;
-  pointer-events:none;
-}
-.law-tag .big{color:#a855f7;font-size:13px;letter-spacing:.3em}
-
-/* CARD with 3 sections + LAW */
-.card{width:min(900px,96vw);background:var(--panel);border:1px solid var(--border);border-radius:14px;padding:0;overflow:hidden}
-.section{padding:14px 16px;border-bottom:1px solid #1a1a1a}
-.section:last-child{border-bottom:none}
-.section.law{background:linear-gradient(180deg,#0a0a0a 0%, #1a0a1f 100%)}
-.section .who{font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:var(--dim);margin-bottom:6px;display:flex;justify-content:space-between}
-.section .who .src{color:#444;font-size:9px;letter-spacing:.1em;text-transform:none}
-.section .body{font-size:14px;line-height:1.55;white-space:pre-wrap;word-break:break-word;color:#ddd;min-height:20px}
-.section.A .who{color:#dc2626}
-.section.B .who{color:#aaa}
-.section.C .who{color:#a855f7}
-.section.law .who{color:#c4b5fd}
-.section.law .body{color:#ede9fe;font-size:15px}
-
-/* INPUT */
-.row{display:flex;gap:10px;width:min(900px,96vw)}
-.row input{flex:1;background:#0f0f0f;border:1px solid #2a2a2a;color:#eee;padding:13px 14px;border-radius:12px;font:inherit;outline:none}
-.row input:focus{border-color:#a855f7;box-shadow:0 0 0 3px rgba(168,85,247,.18)}
-.row button{background:#151515;border:1px solid #333;color:#ddd;padding:0 22px;border-radius:12px;cursor:pointer;font:inherit;letter-spacing:.1em}
-.row button:hover{border-color:#a855f7}
-
-/* ANSIBLE FEED */
-.ansible{
-  width:min(900px,96vw);
-  background:#050505;border:1px solid #151515;border-radius:10px;
-  font-size:11px;color:#555;padding:8px 12px;max-height:120px;overflow-y:auto;
-}
-.ansible .line{padding:2px 0;border-bottom:1px dashed #111}
-.ansible .line:last-child{border-bottom:none}
-.ansible .line.self{color:#a855f7}
-.ansible .line.peer{color:#39ff14}
-.ansible .line.event{color:#444;font-style:italic}
-.ansible .ts{color:#333;margin-right:8px}
-
-.foot{position:fixed;bottom:6px;left:50%;transform:translateX(-50%);font-size:9px;color:#333;letter-spacing:.15em}
+:root{--bg:#020308;--ink:#d8e8e0;--gold:#ffd95a;--mag:#e168ff;--cyan:#32e8ff;--mint:#00ffaa;--red:#dc2626;--panel:rgba(0,0,0,.6);--border:rgba(0,255,170,.18)}
+*{box-sizing:border-box}html,body{margin:0;height:100%;background:#000;color:var(--ink);font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
+body{background:radial-gradient(circle at 50% 42%,rgba(0,255,170,.06),transparent 28%),linear-gradient(var(--border) 1px,transparent 1px),linear-gradient(90deg,var(--border) 1px,transparent 1px),var(--bg);background-size:100% 100%,30px 30px,30px 30px}
+canvas{position:fixed;inset:0}
+.ui{position:fixed;inset:0;padding:18px;display:grid;grid-template-rows:auto 1fr auto;gap:12px;pointer-events:none;overflow:auto}
+.panel{pointer-events:auto;border:1px solid var(--border);background:var(--panel);backdrop-filter:blur(8px);border-radius:14px;padding:14px}
+h1{margin:0;font-size:15px;letter-spacing:.14em;color:var(--mint);font-weight:400}
+.row{display:flex;gap:10px;align-items:center}
+button{background:transparent;border:1px solid var(--border);color:var(--ink);padding:8px 14px;border-radius:8px;cursor:pointer;font:inherit;text-transform:uppercase;font-size:11px}
+button:hover{box-shadow:0 0 12px rgba(0,255,170,.2);color:var(--mint)}
+.voice{border:1px solid var(--border);background:var(--panel);border-radius:10px;margin-bottom:8px;overflow:hidden}
+.voice-hd{display:flex;justify-content:space-between;align-items:center;padding:10px 14px;border-bottom:1px solid var(--border);font-size:11px;letter-spacing:.14em;text-transform:uppercase}
+.voice-bd{padding:14px;font-size:13px;line-height:1.6;white-space:pre-wrap;word-break:break-word;min-height:40px}
+.voice-a .voice-hd{color:var(--red)} 
+.voice-b .voice-hd{color:var(--mag)}
+.voice-c .voice-hd{color:var(--cyan)}
+.voice-law .voice-hd{color:var(--mint)}
+.footer{display:flex;justify-content:space-between;align-items:center;font-size:11px;color:#5a7a6f}
+input[type=text]{flex:1;background:#020712;border:1px solid var(--border);color:var(--ink);padding:10px;border-radius:8px;font:inherit}
+.octet{position:fixed;top:12px;right:12px;font-size:10px;color:#666;letter-spacing:.1em;text-align:right}
 </style>
 </head>
 <body>
-<div class="wrap">
-
-  <div class="topbar">
-    <span>AEON · 3-POINT ENTANGLED · /mnt/data</span>
-    <span id="nodes" class="nodes idle">○ 0 NODES</span>
+<canvas id="cv"></canvas>
+<div class="octet" id="octet">OCTET: 1 · A→B</div>
+<div class="ui">
+  <div class="panel" style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+    <h1>ABD LAW ENGINE</h1>
+    <div style="margin-left:auto;font-size:11px;color:#7aa89a;display:flex;gap:8px;align-items:center" id="status">CONNECTING</div>
   </div>
-
-  <div class="triad" id="triad">
-    <!-- entanglement lines (SVG behind glyphs) -->
-    <svg viewBox="0 0 100 92" preserveAspectRatio="none">
-      <defs>
-        <linearGradient id="line-ab" x1="0" y1="0" x2="1" y2="1">
-          <stop offset="0%" stop-color="#dc2626"/><stop offset="100%" stop-color="#888"/>
-        </linearGradient>
-        <linearGradient id="line-bc" x1="0" y1="0" x2="1" y2="0">
-          <stop offset="0%" stop-color="#888"/><stop offset="100%" stop-color="#a855f7"/>
-        </linearGradient>
-        <linearGradient id="line-ca" x1="1" y1="1" x2="0" y2="0">
-          <stop offset="0%" stop-color="#a855f7"/><stop offset="100%" stop-color="#dc2626"/>
-        </linearGradient>
-      </defs>
-      <!-- A top center ≈ (50,10) ; B bottom-left ≈ (12,78) ; C bottom-right ≈ (88,78) -->
-      <line id="ln-ab" x1="50" y1="14" x2="14" y2="74" stroke="url(#line-ab)" stroke-width="0.4" opacity="0.25"/>
-      <line id="ln-bc" x1="14" y1="78" x2="86" y2="78" stroke="url(#line-bc)" stroke-width="0.4" opacity="0.25"/>
-      <line id="ln-ca" x1="86" y1="74" x2="50" y2="14" stroke="url(#line-ca)" stroke-width="0.4" opacity="0.25"/>
-    </svg>
-
-    <div class="glyph" id="g-A"><svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg"></svg></div>
-    <div class="glyph" id="g-B"><svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg"></svg></div>
-    <div class="glyph" id="g-C"><svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg"></svg></div>
-
-    <div class="law-tag">
-      <div class="big">LAW</div>
-      <div>PULSE-3 INTERIOR</div>
+  <div style="display:grid;grid-template-columns:1fr;gap:12px">
+    <div class="panel" style="display:flex;flex-direction:column;gap:10px">
+      <div class="voice voice-a">
+        <div class="voice-hd"><span>A · ANCHOR · CONTAIN</span><span>-</span></div>
+        <div class="voice-bd" id="voiceA">No anchor in /mnt/data/kb. Seed the volume.</div>
+      </div>
+      <div class="voice voice-b">
+        <div class="voice-hd"><span>B · WITNESS · MODULATE</span><span>-</span></div>
+        <div class="voice-bd" id="voiceB">No second voice in the corpus. Modulation requires plurality.</div>
+      </div>
+      <div class="voice voice-c">
+        <div class="voice-hd"><span>C · COHERENCE · EMERGE</span><span>synthesis(A,B)</span></div>
+        <div class="voice-bd" id="voiceC">No anchor in /mnt/data/kb. However, no second voice in the corpus.</div>
+      </div>
+      <div class="voice voice-law">
+        <div class="voice-hd"><span>LAW · SYNTHESIS</span><span>3-point consensus</span></div>
+        <div class="voice-bd" id="voiceLaw">No anchor in /mnt/data/kb. However, no second voice in the corpus.</div>
+      </div>
+    </div>
+    <div class="panel">
+      <div class="row">
+        <input id="q" type="text" placeholder="Ask..." autocomplete="off">
+        <button id="fire">FIRE</button>
+      </div>
+    </div>
+    <div class="panel" style="max-height:200px;overflow:auto">
+      <div style="font-size:11px;color:#5a7a6f;margin-bottom:8px">ANSIBLE LOG</div>
+      <div id="log" style="font-size:11px;line-height:1.5;color:#a6c8bc"></div>
     </div>
   </div>
-
-  <div class="card" id="card">
-    <div class="section A"><div class="who"><span>A · ANCHOR · CONTAIN</span><span class="src" id="src-A">—</span></div><div class="body" id="body-A">Ask. Three points fire. Center synthesizes.</div></div>
-    <div class="section B"><div class="who"><span>B · WITNESS · MODULATE</span><span class="src" id="src-B">—</span></div><div class="body" id="body-B">—</div></div>
-    <div class="section C"><div class="who"><span>C · COHERENCE · EMERGE</span><span class="src" id="src-C">—</span></div><div class="body" id="body-C">—</div></div>
-    <div class="section law"><div class="who"><span>LAW · SYNTHESIS</span><span class="src">3-point consensus</span></div><div class="body" id="body-LAW">—</div></div>
-  </div>
-
-  <div class="row">
-    <input id="q" placeholder="Ask…" autocomplete="off" autofocus>
-    <button id="send">FIRE</button>
-  </div>
-
-  <div class="ansible" id="ansible">
-    <div class="line event"><span class="ts">--:--:--</span>ansible: awaiting connection…</div>
-  </div>
-
+  <div class="panel footer"><span id="hash">WITNESS --------</span><span>T=<span id="tVal">--</span> · cycles <span id="cyc">--</span></span></div>
 </div>
-<div class="foot">A=CONTAIN · B=MODULATE · C=EMERGE · ENTANGLED · ANSIBLE LIVE</div>
 
 <script>
-// ============================================================
-// AEON glyphs (SVG)
-// ============================================================
-const AEONS = {
-  A:{ color:'#dc2626',
-      glow:'drop-shadow(0 0 10px #dc2626) drop-shadow(0 0 22px rgba(220,38,38,.5))',
-      svg:`<circle cx="100" cy="100" r="62" fill="none" stroke="#dc2626" stroke-width="4"/>
-           <circle cx="100" cy="100" r="22" fill="#7f1d1d" stroke="#fecaca" stroke-width="2"/>
-           <line x1="20" y1="100" x2="180" y2="100" stroke="#dc2626" stroke-width="4"/>
-           <line x1="100" y1="20" x2="100" y2="180" stroke="#dc2626" stroke-width="4"/>
-           <circle cx="20"  cy="100" r="4" fill="#fecaca"/>
-           <circle cx="180" cy="100" r="4" fill="#fecaca"/>
-           <circle cx="100" cy="20"  r="4" fill="#fecaca"/>
-           <circle cx="100" cy="180" r="4" fill="#fecaca"/>`},
-  B:{ color:'#aaaaaa',
-      glow:'drop-shadow(0 0 10px #000) drop-shadow(0 0 22px rgba(120,120,120,.9))',
-      svg:`<circle cx="100" cy="100" r="62" fill="#0a0a0a" stroke="#888" stroke-width="3"/>
-           <path d="M 30 100 Q 60 50, 100 100 T 170 100" fill="none" stroke="#bbb" stroke-width="4"/>
-           <path d="M 30 130 Q 60 80, 100 130 T 170 130" fill="none" stroke="#666" stroke-width="3"/>
-           <line x1="100" y1="30" x2="100" y2="60" stroke="#888" stroke-width="3"/>
-           <line x1="100" y1="160" x2="100" y2="170" stroke="#888" stroke-width="3"/>`},
-  C:{ color:'#a855f7',
-      glow:'drop-shadow(0 0 10px #a855f7) drop-shadow(0 0 22px rgba(168,85,247,.6))',
-      svg:`<circle cx="100" cy="100" r="38" fill="none" stroke="#a855f7" stroke-width="3"/>
-           <circle cx="100" cy="100" r="14" fill="#e9d5ff"/>
-           <g stroke="#a855f7" stroke-width="3">
-             <line x1="100" y1="100" x2="100" y2="22"/>
-             <line x1="100" y1="100" x2="178" y2="100"/>
-             <line x1="100" y1="100" x2="100" y2="178"/>
-             <line x1="100" y1="100" x2="22"  y2="100"/>
-             <line x1="100" y1="100" x2="155" y2="45"/>
-             <line x1="100" y1="100" x2="155" y2="155"/>
-             <line x1="100" y1="100" x2="45"  y2="155"/>
-             <line x1="100" y1="100" x2="45"  y2="45"/>
-           </g>`}
-};
+const cv=document.getElementById('cv'),ctx=cv.getContext('2d');
+function resize(){cv.width=innerWidth*devicePixelRatio;cv.height=innerHeight*devicePixelRatio;ctx.setTransform(devicePixelRatio,0,0,devicePixelRatio,0,0)} addEventListener('resize',resize);resize();
 
-// ============================================================
-// DOM
-// ============================================================
-const $ = id => document.getElementById(id);
-const glyphs = {
-  A: $('g-A'), B: $('g-B'), C: $('g-C')
-};
-const bodies = { A:$('body-A'), B:$('body-B'), C:$('body-C'), LAW:$('body-LAW') };
-const srcs   = { A:$('src-A'),  B:$('src-B'),  C:$('src-C') };
-const lines  = { AB:$('ln-ab'), BC:$('ln-bc'), CA:$('ln-ca') };
-const input  = $('q');
-const send   = $('send');
-const ansible = $('ansible');
-const nodesEl = $('nodes');
+const ORA=['1·A→B there','2·B→C there','3·C→A there','4·A→C back','5·C→B back','6·B→A back','7·Home witness','8·Forward aeon'];
+let STATE={s:0,phi:0,cycles:0,conduction:0};
 
-// paint glyphs
-for (const k of ['A','B','C']){
-  glyphs[k].querySelector('svg').innerHTML = AEONS[k].svg;
-  glyphs[k].style.filter = AEONS[k].glow;
+function draw(){
+  const W=innerWidth,H=innerHeight,t=Date.now()*0.001;
+  ctx.fillStyle='rgba(2,3,8,0.25)';ctx.fillRect(0,0,W,H);
+  
+  const cx=W*0.25,cy=H*0.3,r=60;
+  const cx2=W*0.75,cy2=H*0.3,r2=60;
+  
+  // A wave
+  ctx.save();ctx.strokeStyle='#dc2626';ctx.globalAlpha=0.4;ctx.lineWidth=2;
+  ctx.beginPath();
+  for(let i=0;i<360;i++){const a=i*Math.PI/180;ctx.lineTo(cx+Math.cos(a)*r,cy+Math.sin(a+t)*20);}
+  ctx.stroke();ctx.restore();
+  
+  // C starburst
+  ctx.save();ctx.strokeStyle='#a855f7';ctx.globalAlpha=0.5;ctx.lineWidth=2;
+  for(let i=0;i<8;i++){const a=i*Math.PI/4+t*0.5;ctx.beginPath();ctx.moveTo(cx2,cy2);ctx.lineTo(cx2+Math.cos(a)*r2,cy2+Math.sin(a)*r2);ctx.stroke();}
+  ctx.fillStyle='#a855f7';ctx.beginPath();ctx.arc(cx2,cy2,8,0,Math.PI*2);ctx.fill();ctx.restore();
+  
+  requestAnimationFrame(draw);
 }
 
-// ============================================================
-// fire animation: pulse glyph + light up entanglement lines
-// ============================================================
-function fire(k){
-  glyphs[k].classList.add('fired');
-  setTimeout(() => glyphs[k].classList.remove('fired'), 700);
-
-  // light all incident lines
-  const incident = { A:['AB','CA'], B:['AB','BC'], C:['BC','CA'] }[k];
-  for (const ln of incident){
-    lines[ln].setAttribute('stroke-width','1.2');
-    lines[ln].setAttribute('opacity','0.95');
-    setTimeout(()=> {
-      lines[ln].setAttribute('stroke-width','0.4');
-      lines[ln].setAttribute('opacity','0.25');
-    }, 900);
+async function poll(){
+  try{
+    const r=await fetch('/state');
+    const j=await r.json();
+    STATE=j;
+    document.getElementById('octet').textContent=`OCTET: ${ORA[j.s]}`;
+    document.getElementById('tVal').textContent=j.T.toFixed(3);
+    document.getElementById('cyc').textContent=j.cycles;
+    document.getElementById('hash').textContent='WITNESS '+j.witness;
+    document.getElementById('status').innerHTML='<span style="color:var(--mint)">ONLINE</span>';
+  }catch(e){
+    document.getElementById('status').innerHTML='<span style="color:var(--red)">OFFLINE</span>';
   }
 }
 
-function dimAll(){ for (const k of ['A','B','C']) glyphs[k].classList.add('dim'); }
-function undimAll(){ for (const k of ['A','B','C']) glyphs[k].classList.remove('dim'); }
-
-// ============================================================
-// ANSIBLE — SSE feed
-// ============================================================
-function ts(){ return new Date().toLocaleTimeString(); }
-function feed(line, cls){
-  const el = document.createElement('div');
-  el.className = 'line ' + (cls||'');
-  el.innerHTML = `<span class="ts">${ts()}</span>${line}`;
-  ansible.appendChild(el);
-  while (ansible.children.length > 60) ansible.removeChild(ansible.firstChild);
-  ansible.scrollTop = ansible.scrollHeight;
-}
-function setNodes(n){
-  nodesEl.textContent = `● ${n} NODE${n===1?'':'S'}`;
-  nodesEl.classList.toggle('idle', n === 0);
-}
-
-let myAskTs = 0;
-function connectStream(){
-  const es = new EventSource('/stream');
-  es.onmessage = (e) => {
-    try {
-      const d = JSON.parse(e.data);
-      if (d.type === 'hello')  { setNodes(d.clients); feed(`connected · ${d.clients} node(s) online`, 'event'); }
-      if (d.type === 'arrive') { setNodes(d.clients); feed(`node arrived · total ${d.clients}`, 'event'); }
-      if (d.type === 'depart') { setNodes(d.clients); feed(`node departed · total ${d.clients}`, 'event'); }
-      if (d.type === 'ask'){
-        const isMine = Math.abs(d.ts - myAskTs) < 1500;
-        feed(`${isMine ? '⟶' : '⇇'} "${escapeHtml(d.query.slice(0,80))}"`, isMine ? 'self' : 'peer');
-        if (!isMine) {
-          // peer ask: optionally mirror their result into our card after a beat
-          // (subtle: just animate the triad to show entanglement across nodes)
-          fire('A'); setTimeout(()=>fire('B'), 200); setTimeout(()=>fire('C'), 400);
-        }
-      }
-    } catch {}
-  };
-  es.onerror = () => { feed('ansible link interrupted · retrying', 'event'); setNodes(0); };
-}
-function escapeHtml(s){ return s.replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
-
-// ============================================================
-// ASK — three-point entangled call
-// ============================================================
-async function ask(){
-  const query = input.value.trim();
-  if (!query) return;
-  input.value = '';
-  myAskTs = Date.now();
-
-  // reset card
-  bodies.A.textContent = '…'; bodies.B.textContent = '…'; bodies.C.textContent = '…'; bodies.LAW.textContent = '…';
-  srcs.A.textContent = ''; srcs.B.textContent = ''; srcs.C.textContent = '';
-  dimAll();
-
-  try {
-    // staged animation while request flies
-    setTimeout(()=> { undimAll(); fire('A'); }, 80);
-    setTimeout(()=> fire('B'), 380);
-    setTimeout(()=> fire('C'), 680);
-
-    const r = await fetch('/ask', {
-      method:'POST',
-      headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({query})
-    });
-    if (!r.ok) throw new Error('HTTP ' + r.status);
-    const j = await r.json();
-
-    const map = { A: j.triad[0], B: j.triad[1], C: j.triad[2] };
-    for (const k of ['A','B','C']){
-      bodies[k].textContent = map[k].take || '—';
-      srcs[k].textContent  = map[k].source || '—';
-    }
-    bodies.LAW.textContent = j.law || '—';
-
-  } catch(err){
-    bodies.LAW.textContent = `entanglement broken · ${err.message}`;
-    undimAll();
+async function handleFire(){
+  const q=document.getElementById('q').value.trim();
+  if(!q)return;
+  document.getElementById('q').value='';
+  document.getElementById('voiceA').textContent='...';
+  document.getElementById('voiceB').textContent='...';
+  document.getElementById('voiceC').textContent='...';
+  document.getElementById('voiceLaw').textContent='...';
+  
+  try{
+    const r=await fetch('/ask',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({q})});
+    const j=await r.json();
+    document.getElementById('voiceA').textContent=j.A;
+    document.getElementById('voiceB').textContent=j.B;
+    document.getElementById('voiceC').textContent=j.C;
+    document.getElementById('voiceLaw').textContent=j.LAW;
+    
+    const log=document.getElementById('log');
+    const time=new Date().toLocaleTimeString();
+    log.innerHTML+=`<div>${time} > "${q}"</div>`;
+    log.scrollTop=log.scrollHeight;
+  }catch(e){
+    document.getElementById('voiceLaw').textContent='Connection lost.';
   }
 }
 
-send.onclick = ask;
-input.onkeydown = e => { if (e.key === 'Enter') ask(); };
+document.getElementById('fire').onclick=handleFire;
+document.getElementById('q').onkeydown=e=>{if(e.key==='Enter')handleFire();};
 
-// click any glyph for a description
-glyphs.A.onclick = () => bodies.A.textContent = 'A · ANCHOR · CONTAIN — boundary-keeper, definitional, finds the stable point in /mnt/data/kb.';
-glyphs.B.onclick = () => bodies.B.textContent = 'B · WITNESS · MODULATE — second-voice, contrast, finds plurality and variation across files.';
-glyphs.C.onclick = () => bodies.C.textContent = 'C · COHERENCE · EMERGE — synthesis, welds A and B into one statement = LAW.';
-
-connectStream();
+poll();draw();
+setInterval(poll,1000);
 </script>
 </body>
 </html>
