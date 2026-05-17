@@ -2,156 +2,159 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Single Aeon — Freewill / Persistence</title>
+<title>Tensor Client · Aeon</title>
 <style>
-:root{--bg:#000;--panel:#0a0a0a;--border:#222}
-*{box-sizing:border-box}
-html,body{height:100%;margin:0;background:var(--bg);color:#e5e5e5;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
-.wrap{min-height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:28px;padding:24px}
-.dot{width:110px;height:110px;border-radius:50%;background:#4c1d95;box-shadow:0 0 36px #a855f7,0 0 72px rgba(168,85,247,.45);transition:background .35s,box-shadow .35s,transform .25s;cursor:pointer}
-.dot.pulse{transform:scale(1.09)}
-.card{width:min(740px,94vw);background:var(--panel);border:1px solid var(--border);border-radius:14px;padding:18px}
-.who{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:#999;margin-bottom:8px}
-.text{min-height:56px;font-size:15px;line-height:1.6;white-space:pre-wrap;word-break:break-word}
-.row{display:flex;gap:10px;width:min(740px,94vw);margin-top:8px}
-.row input{flex:1;background:#0f0f0f;border:1px solid #2a2a2a;color:#eee;padding:13px 14px;border-radius:12px;font:inherit;outline:none}
-.row input:focus{border-color:#a855f7;box-shadow:0 0 0 3px rgba(168,85,247,.18)}
-.row button{background:#151515;border:1px solid #333;color:#ddd;padding:0 20px;border-radius:12px;cursor:pointer;font:inherit}
-.row button:hover{border-color:#a855f7}
-.foot{position:fixed;bottom:12px;left:50%;transform:translateX(-50%);font-size:11px;color:#444;white-space:nowrap}
-.status{position:fixed;top:12px;right:12px;font-size:10px;color:#666;letter-spacing:.1em}
+:root{--bg:#020308;--ink:#d8e8e0;--gold:#ffd95a;--mag:#e168ff;--cyan:#32e8ff;--mint:#00ffaa;--panel:rgba(0,0,0,.6);--border:rgba(0,255,170,.18)}
+*{box-sizing:border-box}html,body{margin:0;height:100%;background:#000;color:var(--ink);font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;overflow:hidden}
+body{background:radial-gradient(circle at 50% 42%,rgba(0,255,170,.06),transparent 28%),linear-gradient(var(--border) 1px,transparent 1px),linear-gradient(90deg,var(--border) 1px,transparent 1px),var(--bg);background-size:100% 100%,30px 30px,30px 30px}
+canvas{position:fixed;inset:0}
+.ui{position:fixed;inset:0;padding:18px;display:grid;grid-template-rows:auto 1fr auto;gap:12px;pointer-events:none}
+.panel{pointer-events:auto;border:1px solid var(--border);background:var(--panel);backdrop-filter:blur(8px);border-radius:14px;padding:14px}
+h1{margin:0;font-size:15px;letter-spacing:.14em;color:var(--mint);font-weight:400}
+.row{display:flex;gap:10px;align-items:center}
+button{background:transparent;border:1px solid var(--border);color:var(--ink);padding:8px 14px;border-radius:8px;cursor:pointer;font:inherit;text-transform:uppercase;font-size:11px}
+button:hover,button.on{box-shadow:0 0 12px rgba(0,255,170,.2);color:var(--mint)}
+input[type=range]{width:100%;accent-color:var(--mint)}
+.meter{display:grid;grid-template-columns:60px 1fr 50px;gap:8px;align-items:center;font-size:11px;margin:4px 0}
+.track{height:6px;border:1px solid rgba(255,255,255,.12);background:#020712;border-radius:999px;overflow:hidden}
+.fill{height:100%;transition:width .2s}
+.footer{display:flex;justify-content:space-between;align-items:center;font-size:11px;color:#5a7a6f}
+.offline{background:rgba(180,40,40,.25);border-color:rgba(255,80,80,.4);color:#ffaaa0;padding:4px 10px;border-radius:6px;font-size:11px}
 </style>
 </head>
 <body>
-<div class="status" id="status">LOCAL MODE</div>
-<div class="wrap">
-  <div class="dot" id="dot" title="Single Aeon"></div>
-  <div class="card">
-    <div class="who" id="who">META MUSE · IDLE</div>
-    <div class="text" id="text">Ask a question. I speak only as a response. My color shows who is speaking.</div>
+<canvas id="cv"></canvas>
+<div class="ui">
+  <div class="panel" style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+    <h1>TENSOR CLIENT</h1>
+    <div id="badge" class="offline" style="display:none;margin-left:auto">OFFLINE</div>
+    <div style="margin-left:auto;font-size:11px;color:#7aa89a;display:flex;gap:8px;align-items:center" id="status">CONNECTING</div>
   </div>
-  <div class="row">
-    <input id="q" placeholder="Type a question and press Enter…" autocomplete="off" autofocus>
-    <button id="send">Ask</button>
+  <div style="display:grid;grid-template-columns:260px 1fr 260px;gap:12px">
+    <div class="panel" style="display:flex;flex-direction:column;gap:10px">
+      <div style="font-size:12px;color:var(--mint);text-transform:uppercase;letter-spacing:.1em">Back URL</div>
+      <input id="backUrl" style="background:#020712;border:1px solid var(--border);color:var(--ink);padding:8px;border-radius:8px;font:inherit;width:100%" placeholder="https://your-app.up.railway.app">
+      <div style="font-size:12px;color:var(--mint);text-transform:uppercase;letter-spacing:.1em;margin-top:6px">Controls</div>
+      <div class="row"><button id="measure">Measure</button><button id="spawn">Spawn</button><button id="reset">Reset</button></div>
+      <div class="row"><button id="modePocket" class="on">Pocket</button><button id="modePerson">Person</button></div>
+      <div id="personSliders" style="display:none">
+        <div class="meter"><span style="color:var(--gold)">A</span><div class="track"><div class="fill" id="fA" style="width:60%;background:var(--gold)"></div></div><span id="vA">60</span></div>
+        <input type="range" id="sA" min="0" max="100" value="60">
+        <div class="meter"><span style="color:var(--mag)">B</span><div class="track"><div class="fill" id="fB" style="width:60%;background:var(--mag)"></div></div><span id="vB">60</span></div>
+        <input type="range" id="sB" min="0" max="100" value="60">
+        <div class="meter"><span style="color:var(--cyan)">C</span><div class="track"><div class="fill" id="fC" style="width:60%;background:var(--cyan)"></div></div><span id="vC">60</span></div>
+        <input type="range" id="sC" min="0" max="100" value="60">
+      </div>
+      <div style="font-size:12px;color:var(--mint);text-transform:uppercase;letter-spacing:.1em;margin-top:6px">Readout</div>
+      <div id="readout" style="font-size:12px;line-height:1.5;color:#a6c8bc"></div>
+    </div>
+    <div></div>
+    <div class="panel" style="display:flex;flex-direction:column;gap:6px">
+      <div style="font-size:12px;color:var(--mint);text-transform:uppercase;letter-spacing:.1em;margin-bottom:4px">Archive</div>
+      <div id="archive" style="font-size:11px;line-height:1.5;color:#a6c8bc;max-height:300px;overflow:auto">waiting…</div>
+    </div>
   </div>
+  <div class="panel footer"><span id="hash">WITNESS --------</span><span>T=<span id="tVal">--</span> · nodes <span id="nVal">--</span></span></div>
 </div>
-<div class="foot">RED=A contain • BLACK=B modulate • PURPLE=C emerge • GREEN=Honey Badger • WHITE=Internet</div>
 
 <script>
-const dot = document.getElementById('dot');
-const whoEl = document.getElementById('who');
-const textEl = document.getElementById('text');
-const input = document.getElementById('q');
-const sendBtn = document.getElementById('send');
-const statusEl = document.getElementById('status');
+const cv=document.getElementById('cv'),ctx=cv.getContext('2d');
+function resize(){cv.width=innerWidth*devicePixelRatio;cv.height=innerHeight*devicePixelRatio;ctx.setTransform(devicePixelRatio,0,0,devicePixelRatio,0,0)} addEventListener('resize',resize);resize();
 
-const speakers = {
-  A: {name:'AEON A — RED · CONTAIN', bg:'radial-gradient(circle at 30% 30%, #fecaca 0%, #dc2626 48%, #7f1d1d 78%)', glow:'0 0 36px #dc2626, 0 0 72px rgba(220,38,38,.55)'},
-  B: {name:'AEON B — BLACK · MODULATE', bg:'radial-gradient(circle at 30% 30%, #4b5563 0%, #000 60%)', glow:'0 0 26px #000, 0 0 52px rgba(0,0,0,.9)', border:'2px solid #333'},
-  C: {name:'AEON C — PURPLE · EMERGE', bg:'radial-gradient(circle at 30% 30%, #e9d5ff 0%, #a855f7 50%, #4c1d95 80%)', glow:'0 0 36px #a855f7, 0 0 72px rgba(168,85,247,.55)'},
-  H: {name:'HONEY BADGER — GREEN', bg:'radial-gradient(circle at 30% 30%, #dcfce7 0%, #39ff14 52%, #14532d 80%)', glow:'0 0 36px #39ff14, 0 0 72px rgba(57,255,20,.55)'},
-  I: {name:'INTERNET — WHITE', bg:'radial-gradient(circle at 30% 30%, #fff 0%, #ddd 55%, #888 85%)', glow:'0 0 32px #fff, 0 0 64px rgba(255,255,255,.45)'},
-  M: {name:'META MUSE — CENTER', bg:'radial-gradient(circle at 30% 30%, #ede9fe 0%, #8b5cf6 50%, #4c1d95 80%)', glow:'0 0 36px #8b5cf6, 0 0 72px rgba(139,92,246,.5)'}
-};
+const VC={A:'#ffd95a',B:'#e168ff',C:'#32e8ff',D:'#00ffaa'};
+const ORA=['1·A→B there','2·B→C there','3·C→A there','4·A→C back','5·C→B back','6·B→A back','7·Home witness','8·Forward aeon'];
+let BACK=localStorage.getItem('aeon_back')||'';
+let LOCAL={a:0.6,b:0.6,c:0.6,phiA:0,phiB:2.094,phiC:4.189,phase:0,T:0.216,nodes:[]};
+let CONNECTED=false;
 
-const BACKEND = localStorage.getItem('aeon_backend_url');
-let history = JSON.parse(localStorage.getItem('aeon_local_history') || '[]');
+document.getElementById('backUrl').value=BACK;
+document.getElementById('backUrl').onchange=e=>{BACK=e.target.value.replace(/\/$/,'');localStorage.setItem('aeon_back',BACK);};
 
-function setSpeaker(key){
-  const s = speakers[key];
-  dot.style.background = s.bg;
-  dot.style.boxShadow = s.glow;
-  dot.style.border = s.border || 'none';
-  whoEl.textContent = s.name;
-  whoEl.style.color = key==='B' ? '#aaa' : key==='A' ? '#fca5a5' : key==='H' ? '#39ff14' : key==='I' ? '#fff' : '#c4b5fd';
-  dot.classList.add('pulse');
-  setTimeout(()=>dot.classList.remove('pulse'), 280);
+async function api(p,opts){
+  if(!BACK)return null;
+  try{const r=await fetch(BACK+p,{...opts,mode:'cors'});if(!r.ok)throw new Error(r.status);CONNECTED=true;return r.json();}
+  catch{CONNECTED=false;return null;}
 }
 
-function saveLocal(q, a, k){
-  history.push({ts:Date.now(), q, a, k});
-  if(history.length>100) history.shift();
-  localStorage.setItem('aeon_local_history', JSON.stringify(history));
-}
+async function send(type,payload){return api('/api/v1/event',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({type,payload,client:'tensor-client'})});}
+async function getState(){return api('/api/v1/state');}
+async function getArchive(){return api('/api/v1/archive?limit=12');}
 
-function chooseSpeakerLocal(query){
-  const t = query.toLowerCase();
-  if (/\b(hold|contain|structure|boundary|define|persist|stable)\b/.test(t)) return 'A';
-  if (/\b(modulat|adapt|wave|change|oscillat|bleed|balance)\b/.test(t)) return 'B';
-  if (/\b(emerg|create|expand|new|evolve|grow)\b/.test(t)) return 'C';
-  if (/\b(honey|badger)\b/.test(t)) return 'H';
-  const last3 = history.filter(h=>h.k).slice(-3).map(h=>h.k);
-  const pool = ['A','B','C','H'];
-  const filtered = (last3.length===3 && last3[0]===last3[1] && last3[1]===last3[2]) ? pool.filter(k=>k!==last3[0]) : pool;
-  return filtered[Math.floor(Math.random()*filtered.length)];
-}
+function draw(){
+  const W=innerWidth,H=innerHeight;
+  ctx.fillStyle='rgba(2,3,8,0.25)';ctx.fillRect(0,0,W,H);
+  const s=CONNECTED?LOCAL:{...LOCAL,a:LOCAL.a+Math.sin(Date.now()*0.001)*0.1,b:LOCAL.b+Math.cos(Date.now()*0.0013)*0.1,c:LOCAL.c+Math.sin(Date.now()*0.0009)*0.1};
+  const cx=W*0.5,cy=H*0.48;
+  const r=90+70*s.a;
+  const legs=[[cx+Math.cos(-Math.PI/2)*r,cy+Math.sin(-Math.PI/2)*r],[cx+Math.cos(Math.PI*0.9)*r,cy+Math.sin(Math.PI*0.9)*r],[cx+Math.cos(Math.PI*2.1)*r,cy+Math.sin(Math.PI*2.1)*r]];
 
-async function fetchInternetLocal(query){
-  try{
-    const url = `https://en.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(query)}`;
-    const r = await fetch(url);
-    if(r.ok){
-      const j = await r.json();
-      if(j.extract) return j.extract;
-    }
-  }catch{}
-  try{
-    const ddg = `https://api.allorigins.win/raw?url=${encodeURIComponent('https://api.duckduckgo.com/?q='+encodeURIComponent(query)+'&format=json&no_html=1&skip_disambig=1')}`;
-    const r = await fetch(ddg);
-    const j = await r.json();
-    if(j.AbstractText) return j.AbstractText;
-  }catch{}
-  return null;
-}
-
-async function askBackend(q){
-  const r = await fetch(BACKEND + '/ask', {
-    method: 'POST',
-    headers: {'Content-Type':'application/json'},
-    body: JSON.stringify({q})
+  [VC.A,VC.B,VC.C].forEach((c,i)=>{
+    ctx.save();ctx.strokeStyle=c;ctx.globalAlpha=0.35+0.4*([s.a,s.b,s.c][i]);ctx.lineWidth=3;
+    ctx.beginPath();ctx.moveTo(cx,cy);ctx.lineTo(...legs[i]);ctx.stroke();ctx.restore();
+    ctx.save();ctx.fillStyle=c;ctx.shadowColor=c;ctx.shadowBlur=14;
+    ctx.beginPath();ctx.arc(legs[i][0],legs[i][1],6,0,Math.PI*2);ctx.fill();ctx.restore();
+    ctx.fillStyle=c;ctx.font='12px monospace';ctx.textAlign='center';
+    ctx.fillText(['A','B','C'][i],legs[i][0],legs[i][1]-20);
   });
-  if(!r.ok) throw new Error('Backend error');
-  return await r.json();
+
+  const T=s.T||0;
+  const hu=(T*240+180)%360;
+  ctx.save();ctx.fillStyle=`hsl(${hu},90%,${40+T*55}%)`;ctx.globalAlpha=0.25+T*0.55;
+  ctx.shadowColor=`hsl(${hu},90%,70%)`;ctx.shadowBlur=20+40*T;
+  ctx.beginPath();
+  for(let i=0;i<6;i++){const a=Math.PI/3*i+Math.PI/6;ctx.lineTo(cx+Math.cos(a)*18,cy+Math.sin(a)*18);}
+  ctx.closePath();ctx.fill();ctx.restore();
+  ctx.fillStyle=T>0.95?'#fff':`hsl(${hu},80%,70%)`;ctx.font='14px monospace';ctx.textAlign='center';
+  ctx.fillText(T.toFixed(3),cx,cy+6);
+
+  if(!CONNECTED){
+    ctx.fillStyle='#ff6666';ctx.font='12px monospace';ctx.textAlign='left';
+    ctx.fillText('LOCAL DEMO — no back connected',20,H-20);
+  }
+  requestAnimationFrame(draw);
 }
 
-async function handleAsk(){
-  const q = input.value.trim();
-  if(!q) return;
-  input.value = '';
-  setSpeaker('I');
-  textEl.textContent = 'Thinking…';
-  
-  try {
-    if (BACKEND) {
-      statusEl.textContent = 'RAILWAY MODE';
-      const res = await askBackend(q);
-      setSpeaker(res.speaker);
-      textEl.textContent = res.answer;
-    } else {
-      statusEl.textContent = 'LOCAL MODE';
-      const result = await fetchInternetLocal(q);
-      const speaker = chooseSpeakerLocal(q);
-      setSpeaker(speaker);
-      const out = result ? result.slice(0,900) : 'No internet result. Center holds. Ask about contain, modulate, emerge, or honey badger.';
-      textEl.textContent = out;
-      saveLocal(q, out, speaker);
-    }
-  } catch(e) {
-    setSpeaker('M');
-    textEl.textContent = 'Error: ' + e.message + '. Check backend URL or use local mode.';
+async function poll(){
+  const s=await getState();
+  const badge=document.getElementById('badge');
+  const status=document.getElementById('status');
+  if(!s){badge.style.display='inline-block';status.textContent='LOCAL DEMO';return;}
+  badge.style.display='none';status.innerHTML='<span style="color:var(--mint)">ONLINE</span> · '+ORA[s.phase];
+  LOCAL=s;
+  document.getElementById('tVal').textContent=s.T.toFixed(3);
+  document.getElementById('nVal').textContent=s.nodes.length;
+  document.getElementById('hash').textContent='WITNESS '+s.witness;
+  document.getElementById('readout').innerHTML=`Phase: ${ORA[s.phase]}<br>Mode: ${s.mode}<br>Cycles: ${s.cycles}<br>A=${s.a.toFixed(2)} B=${s.b.toFixed(2)} C=${s.c.toFixed(2)}`;
+  const a=await getArchive();
+  if(a&&a.events){
+    document.getElementById('archive').innerHTML=a.events.map(e=>
+      `<div style="border-left:2px solid ${e.stateAt.T>0.9?'var(--gold)':'var(--border)'};padding-left:6px;margin-bottom:4px">`+
+      `<span style="color:${e.type==='measure'?'var(--gold)':e.type==='spawn'?'var(--cyan)':'var(--mag)'}">${e.type}</span> `+
+      `· ${new Date(e.time).toLocaleTimeString()}</div>`
+    ).join('');
   }
 }
 
-sendBtn.onclick = handleAsk;
-input.onkeydown = e => { if(e.key==='Enter') handleAsk(); };
-dot.onclick = ()=>{ setSpeaker('M'); textEl.textContent = 'Center is still. I speak only as a response. Set aeon_backend_url in localStorage to connect Railway.'; };
+document.getElementById('measure').onclick=()=>send('measure').then(poll);
+document.getElementById('spawn').onclick=()=>send('spawn').then(poll);
+document.getElementById('reset').onclick=()=>send('reset').then(poll);
+document.getElementById('modePocket').onclick=()=>{document.getElementById('modePocket').className='on';document.getElementById('modePerson').className='';document.getElementById('personSliders').style.display='none';send('set_mode',{mode:'pocket'});};
+document.getElementById('modePerson').onclick=()=>{document.getElementById('modePerson').className='on';document.getElementById('modePocket').className='';document.getElementById('personSliders').style.display='block';send('set_mode',{mode:'person'});};
 
-if(BACKEND) {
-  statusEl.textContent = 'RAILWAY MODE';
-  fetch(BACKEND + '/health').catch(()=>{statusEl.textContent = 'RAILWAY OFFLINE';});
-}
-setSpeaker('M');
+['sA','sB','sC'].forEach((id,k)=>{
+  const el=document.getElementById(id);
+  el.oninput=()=>{
+    const v=parseInt(el.value,10)/100;
+    const key=['a','b','c'][k];
+    LOCAL[key]=v;
+    document.getElementById('v'+id[1]).textContent=el.value;
+    document.getElementById('f'+id[1]).style.width=el.value+'%';
+    if(CONNECTED) send('set_vector',{[key]:v});
+  };
+});
+
+poll();draw();
+setInterval(poll,1000);
 </script>
 </body>
 </html>
