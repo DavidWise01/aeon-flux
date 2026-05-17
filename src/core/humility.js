@@ -1,25 +1,41 @@
-// humility.js — anti-hubris constraint
-// core is NOT superman (ego). ego is superman's shadow.
-// we enforce 50/50 humility: no facet > 0.6, and center pull
-
-export function enforceHumility(pos, maxDominance = 0.6, centerPull = 0.05) {
-  let {e, p, l} = pos;
+// humility.js — now works on fractal triads
+export function enforceHumilityFractal(soul) {
+  // apply to each root and recursively
+  [soul.ethos, soul.pathos, soul.logos].forEach(triad => {
+    triad.normalize();
+    
+    // anti-hubris: if any root > 0.6, dampen its entire tree
+    if (triad.total() > 0.6) {
+      const damp = 0.7;
+      const reduce = (node) => {
+        node.value *= damp;
+        if (node.children) {
+          reduce(node.children.e);
+          reduce(node.children.p);
+          reduce(node.children.l);
+        }
+      };
+      reduce(triad);
+    }
+  });
   
-  // if any facet approaches superman status, dampen it
-  const dampen = (v) => v > maxDominance ? maxDominance + (v - maxDominance) * 0.3 : v;
-  e = dampen(e); p = dampen(p); l = dampen(l);
-  
-  // pull toward center (0.333 each) — humility
-  const center = 1/3;
-  e = e * (1 - centerPull) + center * centerPull;
-  p = p * (1 - centerPull) + center * centerPull;
-  l = l * (1 - centerPull) + center * centerPull;
-  
-  // renormalize
+  // renormalize roots to sum 1
+  const e = soul.ethos.total();
+  const p = soul.pathos.total();
+  const l = soul.logos.total();
   const sum = e + p + l;
-  return { e: e/sum, p: p/sum, l: l/sum };
-}
-
-export function isHubris(pos) {
-  return pos.e > 0.65 || pos.p > 0.65 || pos.l > 0.65;
+  const scale = 1 / sum;
+  
+  const scaleNode = (node, s) => {
+    node.value *= s;
+    if (node.children) {
+      scaleNode(node.children.e, s);
+      scaleNode(node.children.p, s);
+      scaleNode(node.children.l, s);
+    }
+  };
+  
+  scaleNode(soul.ethos, scale);
+  scaleNode(soul.pathos, scale);
+  scaleNode(soul.logos, scale);
 }

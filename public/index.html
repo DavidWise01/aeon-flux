@@ -1,90 +1,33 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="utf-8">
-<title>AEON // level 0</title>
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<style>
-:root{--bg:#050507;--fg:#e6e6e6;--cyan:#00ffd0;--mag:#ff2a7f;--grid:#1a1a22}
-body{margin:0;background:var(--bg);color:var(--fg);font-family:ui-monospace,Menlo,Consolas,monospace;display:grid;place-items:center;min-height:100vh}
-.wrap{width:min(900px,95vw);padding:24px}
-h1{letter-spacing:.2em;font-weight:300;margin:0 0 4px}
-.sub{color:#888;font-size:12px;margin-bottom:24px}
-.grid{display:grid;grid-template-columns:1.2fr .8fr;gap:24px}
-.panel{background:#0a0a0f;border:1px solid var(--grid);padding:16px}
-.tri{position:relative;width:100%;aspect-ratio:1;display:grid;place-items:center}
-svg{width:90%;height:90%}
-.dot{fill:var(--cyan);filter:drop-shadow(0 0 6px var(--cyan))}
-.btns{display:flex;gap:12px;margin-top:12px}
-button{background:transparent;border:1px solid var(--grid);color:var(--fg);padding:10px 14px;cursor:pointer;font-family:inherit}
-button:hover{border-color:var(--cyan)}
-.state{font-size:13px;line-height:1.7}
-.k{color:#666}
-.hubris{color:var(--mag)}
-.humility{color:var(--cyan)}
-.log{max-height:140px;overflow:auto;font-size:11px;color:#999;border-top:1px solid var(--grid);margin-top:12px;padding-top:8px}
-</style>
-</head>
-<body>
-<div class="wrap">
-  <h1>AEON</h1>
-  <div class="sub">level 0 — one soul // ethos · pathos · logos</div>
-  <div class="grid">
-    <div class="panel">
-      <div class="tri">
-        <svg viewBox="0 0 200 200">
-          <polygon points="100,10 10,180 190,180" fill="none" stroke="#222" stroke-width="1"/>
-          <text x="100" y="8" text-anchor="middle" fill="#888" font-size="8">ETHOS</text>
-          <text x="6" y="190" fill="#888" font-size="8">PATHOS</text>
-          <text x="194" y="190" text-anchor="end" fill="#888" font-size="8">LOGOS</text>
-          <circle id="dot" class="dot" r="4" cx="100" cy="120"/>
-        </svg>
-      </div>
-      <div class="btns">
-        <button id="left">LEFT: disrupt</button>
-        <button id="right">RIGHT: stabilize</button>
-        <button id="reflect">reflect</button>
-      </div>
-    </div>
-    <div class="panel state">
-      <div><span class="k">soul:</span> <span id="soul">humility — one soul integrated</span></div>
-      <div><span class="k">ethos:</span> <span id="e">0.34</span></div>
-      <div><span class="k">pathos:</span> <span id="p">0.33</span></div>
-      <div><span class="k">logos:</span> <span id="l">0.33</span></div>
-      <div><span class="k">Δ magnitude:</span> <span id="dm">0</span></div>
-      <div class="log" id="log"></div>
-    </div>
-  </div>
-</div>
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>AEON // L2</title>
+<style>body{margin:0;background:#050507;color:#ddd;font-family:monospace} .wrap{padding:20px;max-width:1200px;margin:auto}
+.grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px} .panel{background:#0b0b12;border:1px solid #222;padding:14px}
+h3{margin:0 0 8px;font-weight:400;color:#888;letter-spacing:.1em} button{background:#111;border:1px solid #333;color:#eee;padding:8px 12px;margin:4px;cursor:pointer}
+.tri{width:100%;aspect-ratio:1} .log{font-size:11px;color:#999;max-height:200px;overflow:auto}</style>
+</head><body><div class="wrap">
+<h2>AEON // level 2 — triangulation live</h2>
+<div class="grid">
+<div class="panel"><h3>AEON (you act)</h3><svg class="tri" viewBox="0 0 200 200"><polygon points="100,10 10,180 190,180" fill="none" stroke="#333"/><circle id="dot" r="5" fill="#00ffd0" cx="100" cy="120"/></svg>
+<div><button id="l">disrupt</button><button id="r">stabilize</button><button id="ref">reflect</button></div>
+<div id="aeon-state"></div></div>
 
+<div class="panel"><h3>TREVOR (constraint)</h3><div id="trevor-state"></div><div class="log" id="trevor-log"></div></div>
+
+<div class="panel"><h3>OBSERVER (you watch)</h3><div id="obs-state"></div><div class="log" id="obs-log"></div></div>
+</div></div>
 <script type="module">
 import { aeon } from '../src/aeon/index.js';
-
-const dot = document.getElementById('dot');
-const els = { e: document.getElementById('e'), p: document.getElementById('p'), l: document.getElementById('l'), dm: document.getElementById('dm'), soul: document.getElementById('soul'), log: document.getElementById('log') };
-
-function update(res) {
-  const {x, y} = res.cartesian;
-  dot.setAttribute('cx', 100 + (x-100)*0.9);
-  dot.setAttribute('cy', 10 + y*0.9);
-  els.e.textContent = res.position.e.toFixed(3);
-  els.p.textContent = res.position.p.toFixed(3);
-  els.l.textContent = res.position.l.toFixed(3);
-  els.dm.textContent = res.delta.magnitude.toFixed(4);
-  els.soul.textContent = res.soulState;
-  els.soul.className = res.hubris ? 'hubris' : (res.soulState.includes('humility') ? 'humility' : '');
-  
-  const entry = document.createElement('div');
-  entry.textContent = `${new Date().toLocaleTimeString()} · Δe${res.delta.de.toFixed(3)} Δp${res.delta.dp.toFixed(3)} Δl${res.delta.dl.toFixed(3)}`;
-  els.log.prepend(entry);
+import { toCartesian } from '../src/core/triangulation.js';
+const dot=document.getElementById('dot');
+function upd(r){
+ const c=toCartesian(r.position); dot.setAttribute('cx',100+(c.x-100)*0.9); dot.setAttribute('cy',10+c.y*0.9);
+ document.getElementById('aeon-state').innerHTML=`pos e${r.position.e.toFixed(2)} p${r.position.p.toFixed(2)} l${r.position.l.toFixed(2)}<br>Δ ${r.delta.magnitude.toFixed(3)}<br>${r.soulState}`;
+ document.getElementById('trevor-state').innerHTML=`intent: ${r.trevor.intent}<br>push l:${r.trevor.vector.dl.toFixed(3)}<br><i>${r.trevor.message}</i>`;
+ document.getElementById('obs-state').innerHTML=`awareness ${(r.observer.awareness*100).toFixed(0)}%<br>pattern: ${r.observer.pattern}<br><i>${r.observer.insight}</i>`;
+ document.getElementById('trevor-log').innerHTML = `<div>${new Date().toLocaleTimeString()} — ${r.trevor.message}</div>` + document.getElementById('trevor-log').innerHTML;
+ document.getElementById('obs-log').innerHTML = `<div>${r.observer.insight}</div>` + document.getElementById('obs-log').innerHTML;
 }
-
-document.getElementById('left').onclick = () => update(aeon.act('disrupt'));
-document.getElementById('right').onclick = () => update(aeon.act('stabilize'));
-document.getElementById('reflect').onclick = () => update(aeon.reflect());
-
-// initial
-update({position: aeon.position, delta:{de:0,dp:0,dl:0,magnitude:0}, cartesian:{x:100,y:120}, soulState: aeon.getSoulState(), hubris:false});
-</script>
-</body>
-</html>
+document.getElementById('l').onclick=()=>upd(aeon.act('disrupt'));
+document.getElementById('r').onclick=()=>upd(aeon.act('stabilize'));
+document.getElementById('ref').onclick=()=>upd(aeon.reflect());
+upd(aeon.act('reflect'));
+</script></body></html>

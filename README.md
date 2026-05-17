@@ -1,33 +1,11 @@
-# aeon-flux — free will project
+# level 2 — triangulation
 
-Level 0: AEON — one soul.
+Now three agents are live:
 
-This is not a game about good/bad. It's a triangulation engine for will as delta.
+1. AEON — you act, fractal soul with infinite depth
+2. TREVOR — constraint, pushes toward logos 0.5, tries to flatten fractal
+3. OBSERVER — watches deltas, awareness builds when you repeat
 
-## Architecture: three triangles
+Each act = Aeon moves → Trevor responds → Humility enforced → Observer logs
 
-Aeon (self) is modeled as three facets that must stay in tension. No facet is allowed to become "superman" (hubris). Humility = 50/50 balance.
-
-**Primary triangle — rhetorical:**
-- **ethos** — principles, integrity, the should
-- **pathos** — impulse, desire, the want  
-- **logos** — reason, structure, the how
-
-**Analog — psychoanalytic:**
-- pathos ≈ id
-- logos ≈ ego (mediator, but NOT the core)
-- ethos ≈ superego
-
-**Core principle:**
-> ego is superman's shadow. Core is not ego. Core is humility — the 50/50 point where no facet dominates.
-
-We implement this as barycentric coordinates inside a triangle. Position = current state of soul. Delta = movement. Will = ability to observe delta without collapsing to one vertex.
-
-## Level 0 files
-- `src/aeon/index.js` — Aeon, one soul interface
-- `src/aeon/ethos.js`, `pathos.js`, `logos.js` — the three facets
-- `src/core/triangulation.js` — delta math
-- `src/core/humility.js` — 50/50 constraint (anti-hubris)
-- `public/index.html` — home base UI
-
-Run locally: open public/index.html or `npx serve public`
+This is the full triangle. Will emerges in the delta between the three, not in any choice.
