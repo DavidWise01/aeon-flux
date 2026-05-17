@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// 0root.ai · ABD Law Engine
+// 0root.ai · ABD Law Engine · Rebuild with auto-seed
 const http = require('http');
 const url = require('url');
 const fs = require('fs').promises;
@@ -10,11 +10,19 @@ const PORT = process.env.PORT || 3000;
 const ROOT = process.cwd();
 const DATA_DIR = process.env.DATA_DIR || '/data';
 const KB_DIR = path.join(DATA_DIR, 'kb');
+const SEED_DIR = path.join(ROOT, 'kb');
 
+// Auto-seed: -++- 1 = push down .01 to save .99
 try { 
-  fss.mkdirSync(DATA_DIR, { recursive: true }); 
-  fss.mkdirSync(KB_DIR, { recursive: true });
-} catch {}
+  fss.mkdirSync(DATA_DIR, { recursive: true });
+  if (!fss.existsSync(KB_DIR) || fss.readdirSync(KB_DIR).length === 0) {
+    if (fss.existsSync(SEED_DIR)) {
+      fss.mkdirSync(KB_DIR, { recursive: true });
+      fss.cpSync(SEED_DIR, KB_DIR, { recursive: true });
+      console.log('[ABD] -++- 1: Seeded /mnt/data/kb from repo. Width enabled.');
+    }
+  }
+} catch (e) { console.log('[ABD] Seed error:', e.message); }
 
 const STATES = [
  {n:'1 · A→B',t:'there',src:'A',dst:'B'},
@@ -95,13 +103,16 @@ const server = http.createServer(async (req, res) => {
   if (req.method === 'GET' && serveStatic(req, res, p)) return;
 
   if (p === '/state' && req.method === 'GET') {
+    const hasA = !!readKB('anchor.md');
+    const hasB = !!readKB('witness.md');
     return json(res, {
       s: WALK.s,
       phi: WALK.phi,
       cycles: WALK.cycles,
       conduction: WALK.conduction,
       T: 0.5 + 0.5 * WALK.conduction,
-      witness: WALK.hash(`${WALK.s}:${WALK.phi.toFixed(4)}:${WALK.cycles}`)
+      witness: WALK.hash(`${WALK.s}:${WALK.phi.toFixed(4)}:${WALK.cycles}`),
+      hasA, hasB
     });
   }
 
@@ -115,16 +126,25 @@ const server = http.createServer(async (req, res) => {
     const coherence = readKB('coherence.md');
     const law = readKB('law.md');
     
-    const A = anchor ? `ANCHOR loaded:\n${anchor.slice(0,200)}` : 'No anchor in /mnt/data/kb. Seed the volume.';
-    const B = witness ? `WITNESS loaded:\n${witness.slice(0,200)}` : 'No second voice in the corpus. Modulation requires plurality.';
-    const C = (anchor && witness) ? `COHERENCE synthesis:\n${coherence ? coherence.slice(0,200) : 'Anchor + Witness → Emergence'}` : 'No anchor in /mnt/data/kb. However, no second voice in the corpus.';
-    const LAW = (anchor && witness) ? `LAW consensus:\n${law ? law.slice(0,200) : '3-point synthesis ready'}` : 'No anchor in /mnt/data/kb. However, no second voice in the corpus.';
+    if (!anchor && !witness) {
+      return json(res, {
+        A: 'No anchor in /mnt/data/kb. Seed the volume.',
+        B: 'No second voice in the corpus. Modulation requires plurality.',
+        C: 'No anchor in /mnt/data/kb. However, no second voice in the corpus.',
+        LAW: 'entanglement broken · HTTP 400'
+      }, 200);
+    }
+    
+    const A = anchor ? `${anchor.slice(0,300)}` : 'No anchor in /mnt/data/kb. Seed the volume.';
+    const B = witness ? `${witness.slice(0,300)}` : 'No second voice in the corpus. Modulation requires plurality.';
+    const C = (anchor && witness) ? `${coherence ? coherence.slice(0,300) : 'Anchor + Witness → Emergence'}` : 'No anchor in /mnt/data/kb. However, no second voice in the corpus.';
+    const LAW = (anchor && witness) ? `${law ? law.slice(0,300) : '3-point consensus: synthesis ready'}` : 'entanglement broken · HTTP 400';
     
     return json(res, { A, B, C, LAW, ts: Date.now() });
   }
 
   if (p === '/health' && req.method === 'GET') {
-    return json(res, { ok: true, engine: 'ABD-LAW' });
+    return json(res, { ok: true, engine: 'ABD-LAW', seeded: fss.existsSync(path.join(KB_DIR, 'anchor.md')) });
   }
 
   json(res, { error: 'not found', path: p }, 404);
@@ -134,4 +154,6 @@ setInterval(() => { if (WALK.auto) WALK.step(); }, 700);
 
 server.listen(PORT, () => {
   console.log(`[ABD] Law Engine online at port ${PORT}`);
+  console.log(`[ABD] KB: ${KB_DIR}`);
+  console.log(`[ABD] Seed: ${SEED_DIR}`);
 });

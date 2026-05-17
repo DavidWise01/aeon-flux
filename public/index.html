@@ -38,11 +38,11 @@ input[type=text]{flex:1;background:#020712;border:1px solid var(--border);color:
   <div style="display:grid;grid-template-columns:1fr;gap:12px">
     <div class="panel" style="display:flex;flex-direction:column;gap:10px">
       <div class="voice voice-a">
-        <div class="voice-hd"><span>A · ANCHOR · CONTAIN</span><span>-</span></div>
+        <div class="voice-hd"><span>A · ANCHOR · CONTAIN</span><span id="aStat">-</span></div>
         <div class="voice-bd" id="voiceA">No anchor in /mnt/data/kb. Seed the volume.</div>
       </div>
       <div class="voice voice-b">
-        <div class="voice-hd"><span>B · WITNESS · MODULATE</span><span>-</span></div>
+        <div class="voice-hd"><span>B · WITNESS · MODULATE</span><span id="bStat">-</span></div>
         <div class="voice-bd" id="voiceB">No second voice in the corpus. Modulation requires plurality.</div>
       </div>
       <div class="voice voice-c">
@@ -88,7 +88,7 @@ function draw(){
   for(let i=0;i<360;i++){const a=i*Math.PI/180;ctx.lineTo(cx+Math.cos(a)*r,cy+Math.sin(a+t)*20);}
   ctx.stroke();ctx.restore();
   
-  // C starburst
+  // C starburst  
   ctx.save();ctx.strokeStyle='#a855f7';ctx.globalAlpha=0.5;ctx.lineWidth=2;
   for(let i=0;i<8;i++){const a=i*Math.PI/4+t*0.5;ctx.beginPath();ctx.moveTo(cx2,cy2);ctx.lineTo(cx2+Math.cos(a)*r2,cy2+Math.sin(a)*r2);ctx.stroke();}
   ctx.fillStyle='#a855f7';ctx.beginPath();ctx.arc(cx2,cy2,8,0,Math.PI*2);ctx.fill();ctx.restore();
@@ -106,6 +106,8 @@ async function poll(){
     document.getElementById('cyc').textContent=j.cycles;
     document.getElementById('hash').textContent='WITNESS '+j.witness;
     document.getElementById('status').innerHTML='<span style="color:var(--mint)">ONLINE</span>';
+    document.getElementById('aStat').textContent=j.hasA?'✓':'-';
+    document.getElementById('bStat').textContent=j.hasB?'✓':'-';
   }catch(e){
     document.getElementById('status').innerHTML='<span style="color:var(--red)">OFFLINE</span>';
   }
@@ -133,7 +135,7 @@ async function handleFire(){
     log.innerHTML+=`<div>${time} > "${q}"</div>`;
     log.scrollTop=log.scrollHeight;
   }catch(e){
-    document.getElementById('voiceLaw').textContent='Connection lost.';
+    document.getElementById('voiceLaw').textContent='entanglement broken · HTTP 400';
   }
 }
 
