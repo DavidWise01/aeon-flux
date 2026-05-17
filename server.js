@@ -1,194 +1,146 @@
-#!/usr/bin/env node
-// 0root.ai · Tensor Backend · Aeon
-const http = require('http');
-const url = require('url');
-const fs = require('fs').promises;
-const fss = require('fs');
+// AEON · 0root.ai · same-origin server
+// Backend = /mnt/data (Railway persistent volume)
+// Frontend = /public/index.html
 
+const express = require('express');
+const fs      = require('fs');
+const path    = require('path');
+
+const app  = express();
 const PORT = process.env.PORT || 3000;
-const ROOT = process.cwd();
-const DATA_DIR = process.env.DATA_DIR || '/data';
+const DATA = process.env.DATA_DIR || '/mnt/data';
 
-try { fss.mkdirSync(DATA_DIR, { recursive: true }); } catch {}
+// ensure /mnt/data exists (Railway volume mount point)
+try { fs.mkdirSync(DATA, { recursive: true }); } catch(e) {}
+const LOG_FILE = path.join(DATA, 'aeon-log.jsonl');
+const KB_DIR   = path.join(DATA, 'kb');           // optional knowledge dir
+try { fs.mkdirSync(KB_DIR, { recursive: true }); } catch(e) {}
 
-const ORA = [
-  '1·A→B there','2·B→C there','3·C→A there','4·A→C back',
-  '5·C→B back','6·B→A back','7·Home witness','8·Forward aeon'
-];
+app.use(express.json({ limit: '1mb' }));
+app.use(express.static(path.join(__dirname, 'public')));
 
-// Tensor state
-let STATE = {
-  a: 0.6, b: 0.6, c: 0.6,
-  phiA: 0, phiB: 2.094, phiC: 4.189,
-  phase: 0, // 0-7
-  cycles: 0,
-  mode: 'pocket', // pocket | person
-  nodes: [],
-  archive: [],
-  witness: '',
-  T: 0.216 // computed coherence
-};
-
-function hash(s) {
-  let h = 2166136261;
-  for (let i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 16777619); }
-  return (h >>> 0).toString(16).padStart(8, '0');
+// -------- helpers --------
+function appendLog(rec){
+  try { fs.appendFileSync(LOG_FILE, JSON.stringify(rec) + '\n'); } catch(e) { console.error('log fail', e.message); }
 }
 
-function computeCoherence() {
-  // T = |A| + |B| + |C| normalized with phase alignment
-  const amp = (STATE.a + STATE.b + STATE.c) / 3;
-  const phaseAlign = Math.abs(Math.cos(STATE.phiA - STATE.phiB) + Math.cos(STATE.phiB - STATE.phiC) + Math.cos(STATE.phiC - STATE.phiA)) / 3;
-  STATE.T = Math.min(1, amp * phaseAlign);
-  STATE.witness = hash(`${STATE.phase}:${STATE.T.toFixed(4)}:${STATE.cycles}`);
+function listKB(){
+  try { return fs.readdirSync(KB_DIR).filter(f => /\.(md|txt|json)$/i.test(f)); }
+  catch(e){ return []; }
 }
 
-function save() {
-  fss.writeFileSync(`${DATA_DIR}/tensor.json`, JSON.stringify(STATE, null, 2));
-}
+// flat keyword search across /mnt/data/kb/* — returns first matching snippet
+function searchKB(query){
+  const q = query.toLowerCase().trim();
+  if(!q) return null;
+  const tokens = q.split(/\s+/).filter(t => t.length > 2);
+  if(!tokens.length) return null;
 
-function load() {
-  try {
-    const raw = fss.readFileSync(`${DATA_DIR}/tensor.json`, 'utf-8');
-    Object.assign(STATE, JSON.parse(raw));
-  } catch {}
-}
-
-load();
-computeCoherence();
-
-function cors(res) {
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
-}
-
-function json(res, o, code) {
-  res.writeHead(code || 200, { 'Content-Type': 'application/json' });
-  res.end(JSON.stringify(o, null, 2));
-}
-
-function readBody(req) {
-  return new Promise(res => {
-    let d = ''; req.on('data', c => d += c); req.on('end', () => {
-      try { res(JSON.parse(d)); } catch { res({}); }
-    });
-  });
-}
-
-function serveStatic(req, res, filePath) {
-  try {
-    const fullPath = `${ROOT}/public${filePath}`;
-    if (fss.existsSync(fullPath) && fss.statSync(fullPath).isFile()) {
-      const ext = filePath.split('.').pop();
-      const types = {html:'text/html',js:'application/javascript',css:'text/css'};
-      res.writeHead(200, {'Content-Type': types[ext] || 'text/plain'});
-      fss.createReadStream(fullPath).pipe(res);
-      return true;
+  for (const fname of listKB()){
+    const full = path.join(KB_DIR, fname);
+    let body;
+    try { body = fs.readFileSync(full, 'utf8'); } catch { continue; }
+    const lower = body.toLowerCase();
+    // score by token hits
+    let hitIdx = -1;
+    for (const tok of tokens){
+      const idx = lower.indexOf(tok);
+      if (idx !== -1){ hitIdx = idx; break; }
     }
-  } catch {}
-  return false;
+    if (hitIdx !== -1){
+      const start = Math.max(0, hitIdx - 200);
+      const end   = Math.min(body.length, hitIdx + 700);
+      return { snippet: body.slice(start, end).trim(), source: fname };
+    }
+  }
+  return null;
 }
 
-const server = http.createServer(async (req, res) => {
-  cors(res);
-  if (req.method === 'OPTIONS') { res.writeHead(204); return res.end(); }
-  const u = url.parse(req.url, true);
-  const p = u.pathname;
+// freewill speaker pick (mirrors frontend, server-authoritative)
+function pickSpeaker(q){
+  const t = q.toLowerCase();
+  if (/(hold|contain|structure|boundary|define|persist|stable|anchor)/.test(t)) return 'A';
+  if (/(modulat|adapt|wave|change|oscillat|bleed|balance|flow)/.test(t))       return 'B';
+  if (/(emerg|create|expand|new|evolve|grow|birth)/.test(t))                    return 'C';
+  if (/(honey|badger|wild|chaos|break)/.test(t))                                return 'H';
+  return ['A','B','C','H'][Math.floor(Math.random()*4)];
+}
 
-  if (req.method === 'GET' && (p === '/' || p === '/index.html')) {
-    return serveStatic(req, res, '/index.html');
-  }
-  if (req.method === 'GET' && serveStatic(req, res, p)) return;
+// -------- routes --------
 
-  if (p === '/api/v1/state' && req.method === 'GET') {
-    return json(res, STATE);
+// POST /ask  → {answer, speaker, source?}
+app.post('/ask', (req, res) => {
+  const query = (req.body && req.body.query || '').toString().slice(0, 2000);
+  if(!query) return res.status(400).json({ error: 'empty query' });
+
+  const hit = searchKB(query);
+  const speaker = pickSpeaker(query);
+  let answer, source;
+
+  if (hit){
+    answer = hit.snippet;
+    source = `/mnt/data/kb/${hit.source}`;
+  } else {
+    answer = `No match in /mnt/data/kb. Drop .md / .txt / .json files into the volume to give the Aeon a corpus to draw from.`;
   }
 
-  if (p === '/api/v1/archive' && req.method === 'GET') {
-    const limit = parseInt(u.query.limit, 10) || 12;
-    return json(res, { events: STATE.archive.slice(-limit) });
-  }
-
-  if (p === '/api/v1/event' && req.method === 'POST') {
-    const body = await readBody(req);
-    const { type, payload } = body;
-    
-    const event = { type, payload, time: Date.now(), stateAt: { ...STATE } };
-    STATE.archive.unshift(event);
-    STATE.archive = STATE.archive.slice(0, 100);
-    
-    if (type === 'measure') {
-      // Collapse: sample from amplitudes
-      const s2 = STATE.a**2 + STATE.b**2 + STATE.c**2;
-      const pA = STATE.a**2 / s2, pB = STATE.b**2 / s2;
-      const d = Math.random();
-      let collapsed = 'C';
-      if (d < pA) collapsed = 'A';
-      else if (d < pA + pB) collapsed = 'B';
-      event.result = { collapsed, probabilities: {A: pA, B: pB, C: 1-pA-pB} };
-    }
-    
-    if (type === 'spawn') {
-      // Add node to center
-      STATE.nodes.push({ id: Date.now(), t: Date.now(), phase: STATE.phase });
-      STATE.nodes = STATE.nodes.slice(-20);
-    }
-    
-    if (type === 'reset') {
-      STATE.a = 0.6; STATE.b = 0.6; STATE.c = 0.6;
-      STATE.phiA = 0; STATE.phiB = 2.094; STATE.phiC = 4.189;
-      STATE.phase = 0; STATE.cycles = 0;
-      STATE.nodes = []; STATE.archive = [];
-    }
-    
-    if (type === 'set_mode') {
-      STATE.mode = payload.mode || 'pocket';
-    }
-    
-    if (type === 'set_vector') {
-      Object.assign(STATE, payload);
-      // Evolve phase based on vector
-      STATE.phiA += (STATE.a - 0.5) * 0.1;
-      STATE.phiB += (STATE.b - 0.5) * 0.1;
-      STATE.phiC += (STATE.c - 0.5) * 0.1;
-    }
-    
-    // Evolve phase
-    STATE.phase = (STATE.phase + 1) % 8;
-    if (STATE.phase === 0) STATE.cycles++;
-    
-    computeCoherence();
-    save();
-    
-    return json(res, { ok: true, state: STATE });
-  }
-
-  if (p === '/health' && req.method === 'GET') {
-    return json(res, { 
-      ok: true, 
-      tensor: 'aeon',
-      witness: STATE.witness,
-      phase: STATE.phase,
-      T: STATE.T,
-      cycles: STATE.cycles
-    });
-  }
-
-  json(res, { error: 'not found', path: p }, 404);
+  const rec = { ts: Date.now(), query, answer, speaker, source: source || null };
+  appendLog(rec);
+  res.json({ answer, speaker, source });
 });
 
-// Auto-evolve if in pocket mode
-setInterval(() => {
-  if (STATE.mode === 'pocket') {
-    STATE.phiA += 0.05 + (Math.random()-0.5)*0.01;
-    STATE.phiB += 0.05 + (Math.random()-0.5)*0.01;
-    STATE.phiC += 0.05 + (Math.random()-0.5)*0.01;
-    computeCoherence();
-  }
-}, 100);
+// GET /history → last N log entries
+app.get('/history', (req, res) => {
+  const n = Math.max(1, Math.min(500, parseInt(req.query.n) || 50));
+  let lines = [];
+  try {
+    const raw = fs.readFileSync(LOG_FILE, 'utf8').trim().split('\n').filter(Boolean);
+    lines = raw.slice(-n).map(l => { try { return JSON.parse(l); } catch { return null; } }).filter(Boolean);
+  } catch(e) {}
+  res.json({ count: lines.length, entries: lines });
+});
 
-server.listen(PORT, () => {
-  console.log(`[Tensor] Aeon backend online at port ${PORT}`);
-  console.log(`[Tensor] Witness: ${STATE.witness}`);
+// GET /kb → list files in /mnt/data/kb
+app.get('/kb', (req, res) => {
+  res.json({ dir: KB_DIR, files: listKB() });
+});
+
+// GET /kb/:name → raw file content (read-only, basename only)
+app.get('/kb/:name', (req, res) => {
+  const name = path.basename(req.params.name);
+  const full = path.join(KB_DIR, name);
+  if(!full.startsWith(KB_DIR)) return res.status(400).json({error:'bad path'});
+  try {
+    const body = fs.readFileSync(full, 'utf8');
+    res.type('text/plain').send(body);
+  } catch(e) {
+    res.status(404).json({error:'not found'});
+  }
+});
+
+// POST /kb/:name → write a file into /mnt/data/kb
+app.post('/kb/:name', (req, res) => {
+  const name = path.basename(req.params.name);
+  if(!/\.(md|txt|json)$/i.test(name)) return res.status(400).json({error:'extension must be .md .txt or .json'});
+  const full = path.join(KB_DIR, name);
+  if(!full.startsWith(KB_DIR)) return res.status(400).json({error:'bad path'});
+  const body = (req.body && req.body.content || '').toString();
+  try {
+    fs.writeFileSync(full, body, 'utf8');
+    res.json({ ok: true, file: name, bytes: Buffer.byteLength(body) });
+  } catch(e){
+    res.status(500).json({error: e.message});
+  }
+});
+
+// GET /health
+app.get('/health', (req, res) => {
+  let volOk = false, kbCount = 0;
+  try { fs.accessSync(DATA, fs.constants.W_OK); volOk = true; } catch {}
+  kbCount = listKB().length;
+  res.json({ ok: true, data_dir: DATA, volume_writable: volOk, kb_files: kbCount });
+});
+
+app.listen(PORT, () => {
+  console.log(`AEON server :${PORT}  data=${DATA}`);
 });
