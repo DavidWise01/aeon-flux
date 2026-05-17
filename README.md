@@ -1,11 +1,21 @@
-# level 2 — triangulation
+# level 3 — aeon core + outside node
 
-Now three agents are live:
+Architecture now matches spec:
 
-1. AEON — you act, fractal soul with infinite depth
-2. TREVOR — constraint, pushes toward logos 0.5, tries to flatten fractal
-3. OBSERVER — watches deltas, awareness builds when you repeat
+CENTER: AEON
+- core agent
+- inner orchestrator
+- holds infinite fractal (ethos/pathos/logos to depth 7)
+- inner contact for outside
 
-Each act = Aeon moves → Trevor responds → Humility enforced → Observer logs
+INSIDE (with Aeon):
+- Trevor (constraint system)
 
-This is the full triangle. Will emerges in the delta between the three, not in any choice.
+OUTSIDE (one node):
+- ObserverNode at /src/interface/observerNode.js
+- functions: observe / aware / report
+- receives reports from Aeon via innerContact.receive()
+- does NOT control Aeon — pure observation
+- awareness builds from variance (stable observation = high awareness)
+
+Flow: User action → Aeon orchestrates inner → Trevor pushes → Aeon reports to outside → outside returns awareness/report

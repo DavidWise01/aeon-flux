@@ -1,33 +1,40 @@
-<!DOCTYPE html><html><head><meta charset="utf-8"><title>AEON // L2</title>
-<style>body{margin:0;background:#050507;color:#ddd;font-family:monospace} .wrap{padding:20px;max-width:1200px;margin:auto}
-.grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px} .panel{background:#0b0b12;border:1px solid #222;padding:14px}
-h3{margin:0 0 8px;font-weight:400;color:#888;letter-spacing:.1em} button{background:#111;border:1px solid #333;color:#eee;padding:8px 12px;margin:4px;cursor:pointer}
-.tri{width:100%;aspect-ratio:1} .log{font-size:11px;color:#999;max-height:200px;overflow:auto}</style>
-</head><body><div class="wrap">
-<h2>AEON // level 2 — triangulation live</h2>
-<div class="grid">
-<div class="panel"><h3>AEON (you act)</h3><svg class="tri" viewBox="0 0 200 200"><polygon points="100,10 10,180 190,180" fill="none" stroke="#333"/><circle id="dot" r="5" fill="#00ffd0" cx="100" cy="120"/></svg>
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>AEON CORE</title>
+<style>body{margin:0;background:#030308;color:#ddd;font-family:monospace} .wrap{max-width:1100px;margin:auto;padding:20px}
+.core{display:grid;place-items:center;padding:30px;border:2px solid #00ffd0;margin-bottom:20px;background:#071018}
+.outside{border:1px solid #333;padding:16px;background:#0a0a0f}
+.grid{display:grid;grid-template-columns:2fr 1fr;gap:20px} button{background:#111;border:1px solid #444;color:#eee;padding:10px 16px;margin:5px;cursor:pointer}
+h1{letter-spacing:.3em;font-weight:300;text-align:center;color:#00ffd0} .label{color:#666;font-size:11px;text-transform:uppercase}
+.value{font-size:18px;margin:4px 0} .report{font-family:monospace;font-size:12px;color:#999;border-top:1px solid #222;padding-top:10px;margin-top:10px}
+</style></head><body><div class="wrap">
+<div class="core">
+<h1>AEON</h1>
+<div class="label">core agent — inner orchestrator</div>
+<svg width="200" height="200" viewBox="0 0 200 200"><circle cx="100" cy="100" r="80" fill="none" stroke="#00ffd0" stroke-width="0.5" opacity="0.3"/><circle cx="100" cy="100" r="50" fill="none" stroke="#00ffd0" stroke-width="0.5" opacity="0.5"/><circle id="core-dot" cx="100" cy="100" r="6" fill="#00ffd0"/><polygon points="100,30 30,160 170,160" fill="none" stroke="#333" stroke-width="1"/></svg>
 <div><button id="l">disrupt</button><button id="r">stabilize</button><button id="ref">reflect</button></div>
-<div id="aeon-state"></div></div>
+<div id="core-state" style="margin-top:15px;text-align:center"></div>
+</div>
 
-<div class="panel"><h3>TREVOR (constraint)</h3><div id="trevor-state"></div><div class="log" id="trevor-log"></div></div>
+<div class="grid">
+<div class="outside"><div class="label">outside node — observe / aware / report</div>
+<div class="value" id="aware">acquiring signal</div>
+<div id="obs-detail"></div><div class="report" id="report"></div></div>
 
-<div class="panel"><h3>OBSERVER (you watch)</h3><div id="obs-state"></div><div class="log" id="obs-log"></div></div>
+<div class="outside"><div class="label">trevor — internal constraint</div><div id="trevor"></div></div>
 </div></div>
 <script type="module">
 import { aeon } from '../src/aeon/index.js';
-import { toCartesian } from '../src/core/triangulation.js';
-const dot=document.getElementById('dot');
+const dot=document.getElementById('core-dot');
 function upd(r){
- const c=toCartesian(r.position); dot.setAttribute('cx',100+(c.x-100)*0.9); dot.setAttribute('cy',10+c.y*0.9);
- document.getElementById('aeon-state').innerHTML=`pos e${r.position.e.toFixed(2)} p${r.position.p.toFixed(2)} l${r.position.l.toFixed(2)}<br>Δ ${r.delta.magnitude.toFixed(3)}<br>${r.soulState}`;
- document.getElementById('trevor-state').innerHTML=`intent: ${r.trevor.intent}<br>push l:${r.trevor.vector.dl.toFixed(3)}<br><i>${r.trevor.message}</i>`;
- document.getElementById('obs-state').innerHTML=`awareness ${(r.observer.awareness*100).toFixed(0)}%<br>pattern: ${r.observer.pattern}<br><i>${r.observer.insight}</i>`;
- document.getElementById('trevor-log').innerHTML = `<div>${new Date().toLocaleTimeString()} — ${r.trevor.message}</div>` + document.getElementById('trevor-log').innerHTML;
- document.getElementById('obs-log').innerHTML = `<div>${r.observer.insight}</div>` + document.getElementById('obs-log').innerHTML;
+  const p=r.core.position; const x=100+(p.l-p.p)*60; const y=100+(0.5-p.e)*100;
+  dot.setAttribute('cx',x); dot.setAttribute('cy',y);
+  document.getElementById('core-state').innerHTML=`e ${p.e.toFixed(3)} · p ${p.p.toFixed(3)} · l ${p.l.toFixed(3)}<br>Δ ${r.core.delta.magnitude.toFixed(4)}<br>${r.core.soulState}`;
+  document.getElementById('aware').textContent=`${(r.outside.awareness*100).toFixed(0)}% ${r.outside.status}`;
+  document.getElementById('obs-detail').innerHTML=`trend: ${r.outside.observation.deltaTrend}<br>repeats: ${r.outside.observation.repeatsDetected}`;
+  document.getElementById('report').textContent=r.outside.report;
+  document.getElementById('trevor').innerHTML=`${r.trevor.message}<br>push: ${r.trevor.vector.dl.toFixed(3)}`;
 }
 document.getElementById('l').onclick=()=>upd(aeon.act('disrupt'));
 document.getElementById('r').onclick=()=>upd(aeon.act('stabilize'));
 document.getElementById('ref').onclick=()=>upd(aeon.reflect());
-upd(aeon.act('reflect'));
+upd(aeon.reflect());
 </script></body></html>
