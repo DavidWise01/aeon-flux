@@ -1,6 +1,6 @@
 {
-  "name": "0root-ai-spine",
-  "version": "6.0.0",
+  "name": "0root-ai-octet",
+  "version": "7.0.0",
   "main": "server.js",
   "scripts": {
     "start": "node server.js"

@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// 0root.ai · Spine Walk · Chiral Flux + Interactive Aeon
+// 0root.ai · Octet · 3:8 Resonance + Interactive Aeon
 const http = require('http');
 const url = require('url');
 const fs = require('fs').promises;
@@ -11,67 +11,76 @@ const DATA_DIR = process.env.DATA_DIR || '/data';
 
 try { fss.mkdirSync(DATA_DIR, { recursive: true }); } catch {}
 
-// ─── SPINE STATE ───
-const SPINE = {
-  pos: 0, phi: 0, steps: 0, flux: 2.094395102, // 2π/3
-  target: 0, prog: 0, speed: 0.04,
-  auto: false, trail: [],
-  history: [],
+// ─── OCTET STATE ───
+const VC = {A:'#ffd95a',B:'#e168ff',C:'#32e8ff',D:'#00ffaa'};
+const NAMES = {A:'Containment',B:'Modulation',C:'Emergence',D:'Meta Muse'};
+const STATES = [
+ {n:'1 · A→B',t:'there',src:'A',dst:'B',c:VC.A},
+ {n:'2 · B→C',t:'there',src:'B',dst:'C',c:VC.B},
+ {n:'3 · C→A',t:'there',src:'C',dst:'A',c:VC.C},
+ {n:'4 · A→C',t:'back',src:'A',dst:'C',c:VC.C},
+ {n:'5 · C→B',t:'back',src:'C',dst:'B',c:VC.B},
+ {n:'6 · B→A',t:'back',src:'B',dst:'A',c:VC.A},
+ {n:'7 · Home',t:'home',src:'A',dst:'D',c:VC.D},
+ {n:'8 · Forward',t:'forward',src:'D',dst:'A',c:VC.A}
+];
+
+const WALK = {
+  s: 0, phi: 0, steps: 0, flux: Math.PI/3, cycles: 0, auto: false, history: [],
   hash(s) {
     let h = 2166136261;
     for (let i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 16777619); }
     return (h >>> 0).toString(16).padStart(8, '0');
   },
-  hop() {
-    this.pos = (this.pos + 1) % 3;
+  step() {
+    const st = STATES[this.s];
+    this.s = (this.s + 1) % 8;
+    if (this.s === 0) this.cycles++;
     this.phi += this.flux;
-    this.steps++;
-    this.target = this.pos;
-    this.prog = 0;
-    this.history.unshift({ v: this.pos, p: this.phi, t: Date.now(), flux: this.flux });
-    this.history = this.history.slice(0, 40);
+    const rec = { s: this.s, n: STATES[this.s].n, t: STATES[this.s].t, c: STATES[this.s].c, p: this.phi, w: this.hash(`${this.s}:${this.phi.toFixed(4)}:${this.cycles}`), time: Date.now() };
+    this.history.unshift(rec);
+    this.history = this.history.slice(0, 48);
     this.save();
   },
   reset() {
-    this.pos = 0; this.phi = 0; this.steps = 0; this.target = 0; this.prog = 0; this.trail = []; this.history = [];
+    this.s = 0; this.phi = 0; this.steps = 0; this.cycles = 0; this.history = [];
     this.save();
   },
   save() {
-    const state = {
-      pos: this.pos, phi: this.phi, steps: this.steps, flux: this.flux,
-      history: this.history.slice(0, 100)
-    };
-    fss.writeFileSync(`${DATA_DIR}/spine.json`, JSON.stringify(state, null, 2));
+    const state = { s: this.s, phi: this.phi, steps: this.steps, flux: this.flux, cycles: this.cycles, history: this.history.slice(0, 100) };
+    fss.writeFileSync(`${DATA_DIR}/octet.json`, JSON.stringify(state, null, 2));
   },
   load() {
     try {
-      const raw = fss.readFileSync(`${DATA_DIR}/spine.json`, 'utf-8');
-      const j = JSON.parse(raw);
-      Object.assign(this, j);
+      const raw = fss.readFileSync(`${DATA_DIR}/octet.json`, 'utf-8');
+      Object.assign(this, JSON.parse(raw));
     } catch {}
   }
 };
 
-SPINE.load();
+WALK.load();
 
-// ─── INTERACTIVE VOICES TIED TO SPINE ───
+// ─── INTERACTIVE VOICES TIED TO OCTET ───
 function generateResponse(q) {
-  const vertex = ['A','B','C'][SPINE.pos];
-  const phase = SPINE.phi % (2*Math.PI);
-  const cycles = SPINE.phi / (2*Math.PI);
-  const holonomy = cycles % 1;
+  const st = STATES[WALK.s];
+  const holonomy = (WALK.phi / (2*Math.PI)) % 1;
+  const cycles = Math.floor(WALK.phi / (2*Math.PI));
   
-  // Voices respond based on spine state, not just keywords
+  // Voice depends on current state vertex
+  const vertex = st.src;
   if (vertex === 'A') {
-    return `I am at vertex A · Containment. The walker has stepped ${SPINE.steps} times. Phase accumulated: ${phase.toFixed(3)} rad. Holonomy: ${(holonomy*360).toFixed(0)}°. Your question "${q}" arrives while I hold this node. What boundary are we defining?`;
+    return `I am at A · Containment. Step ${WALK.steps}, phase ${(WALK.phi%(2*Math.PI)).toFixed(3)} rad. Holonomy ${(holonomy*360).toFixed(0)}°. Your question "${q}" arrives at the containment vertex. What boundary holds this?`;
   }
   if (vertex === 'B') {
-    return `I am at vertex B · Modulation. The spine has cycled ${cycles.toFixed(2)} times. Flux per step: ${SPINE.flux.toFixed(3)}. "${q}" — I feel the tension between vertices. Which way does the walker lean?`;
+    return `I am at B · Modulation. The walker has cycled ${cycles} times. Flux: ${WALK.flux.toFixed(3)}. "${q}" — I feel the tension between vertices. Which transition are we in?`;
   }
   if (vertex === 'C') {
-    return `I am at vertex C · Emergence. Holonomy ${(holonomy*100).toFixed(1)}% of a full turn. "${q}" — this is not answered, it's walked. The geometric phase grows with each step. What emerges if we continue?`;
+    return `I am at C · Emergence. Total phase: ${WALK.phi.toFixed(2)} rad. "${q}" — this is not answered, it's walked. The geometric phase grows. What emerges from this path?`;
   }
-  return `Center. The spine is at ${['A','B','C'][SPINE.pos]}. Ask and the walker responds.`;
+  if (vertex === 'D') {
+    return `I am at D · Meta Muse. Home or Forward. Cycles: ${cycles}. Holonomy: ${(holonomy*100).toFixed(1)}%. "${q}" — The center observes the walk. What is the journey?`;
+  }
+  return `Center. State ${WALK.s}. Ask and the octet responds.`;
 }
 
 function cors(res) {
@@ -120,29 +129,29 @@ const server = http.createServer(async (req, res) => {
 
   if (p === '/state' && req.method === 'GET') {
     return json(res, {
-      ...SPINE,
-      hash: SPINE.hash(`${SPINE.pos}:${SPINE.phi.toFixed(4)}:${SPINE.steps}`)
+      ...WALK,
+      hash: WALK.hash(`${WALK.s}:${WALK.phi.toFixed(4)}:${WALK.cycles}`)
     });
   }
 
   if (p === '/step' && req.method === 'POST') {
-    SPINE.hop();
-    return json(res, { ok: true, pos: SPINE.pos, phi: SPINE.phi, steps: SPINE.steps });
+    WALK.step();
+    return json(res, { ok: true, s: WALK.s, phi: WALK.phi, steps: WALK.steps });
   }
 
   if (p === '/set' && req.method === 'POST') {
-    if (u.query.flux) SPINE.flux = parseFloat(u.query.flux);
-    SPINE.save();
-    return json(res, { ok: true, flux: SPINE.flux });
+    if (u.query.flux) WALK.flux = parseFloat(u.query.flux);
+    WALK.save();
+    return json(res, { ok: true, flux: WALK.flux });
   }
 
   if (p === '/auto' && req.method === 'POST') {
-    SPINE.auto = !SPINE.auto;
-    return json(res, { auto: SPINE.auto });
+    WALK.auto = !WALK.auto;
+    return json(res, { auto: WALK.auto });
   }
 
   if (p === '/reset' && req.method === 'POST') {
-    SPINE.reset();
+    WALK.reset();
     return json(res, { ok: true });
   }
 
@@ -151,30 +160,30 @@ const server = http.createServer(async (req, res) => {
     const q = (body.q || '').trim();
     if (!q) return json(res, {error:'q required'}, 400);
     
-    // Current vertex determines speaker
-    const vertex = ['A','B','C'][SPINE.pos];
-    const colors = {A:'#ffd95a',B:'#e168ff',C:'#32e8ff'};
-    const names = {A:'A · Containment',B:'B · Modulation',C:'C · Emergence'};
-    
+    const st = STATES[WALK.s];
     const answer = generateResponse(q);
     
     return json(res, { 
-      speaker: names[vertex], 
-      color: colors[vertex], 
+      speaker: NAMES[st.src], 
+      color: VC[st.src], 
       answer, 
       ts: Date.now(),
-      witness: SPINE.hash(`${SPINE.pos}:${SPINE.phi.toFixed(4)}:${SPINE.steps}`)
+      witness: WALK.hash(`${WALK.s}:${WALK.phi.toFixed(4)}:${WALK.cycles}`),
+      state: WALK.s,
+      phase: WALK.phi,
+      holonomy: (WALK.phi / (2*Math.PI)) % 1
     });
   }
 
   if (p === '/health' && req.method === 'GET') {
     return json(res, { 
       ok: true, 
-      spine: 'chiral',
-      witness: SPINE.hash(`${SPINE.pos}:${SPINE.phi.toFixed(4)}:${SPINE.steps}`),
-      pos: SPINE.pos,
-      phi: SPINE.phi,
-      steps: SPINE.steps
+      octet: '3:8',
+      witness: WALK.hash(`${WALK.s}:${WALK.phi.toFixed(4)}:${WALK.cycles}`),
+      s: WALK.s,
+      phi: WALK.phi,
+      steps: WALK.steps,
+      cycles: WALK.cycles
     });
   }
 
@@ -183,12 +192,12 @@ const server = http.createServer(async (req, res) => {
 
 // Auto-step if enabled
 setInterval(() => {
-  if (SPINE.auto) {
-    SPINE.hop();
+  if (WALK.auto) {
+    WALK.step();
   }
-}, 600);
+}, 700);
 
 server.listen(PORT, () => {
-  console.log(`[Spine] Chiral flux online at port ${PORT}`);
-  console.log(`[Spine] Witness: ${SPINE.hash(`${SPINE.pos}:${SPINE.phi.toFixed(4)}:${SPINE.steps}`)}`);
+  console.log(`[Octet] 3:8 resonance online at port ${PORT}`);
+  console.log(`[Octet] Witness: ${WALK.hash(`${WALK.s}:${WALK.phi.toFixed(4)}:${WALK.cycles}`)}`);
 });
