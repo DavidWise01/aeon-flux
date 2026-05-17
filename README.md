@@ -1,37 +1,33 @@
-# 0root.ai — Octet · 3:8 Resonance
+# 0root.ai — Octet · Dynamic F/B
 
-Spine Walk. Chiral Flux. The walker has its own dynamics.
+Three Fates. 8-State Walk. Dynamic Front/Back coupling.
 
-## 8 States
-1. A→B (there)
-2. B→C (there)
-3. C→A (there)
-4. A→C (back)
-5. C→B (back)
-6. B→A (back)
-7. Home (A→D)
-8. Forward (D→A)
+## F/B Coupling
+The front (fates UI) and back (conduction/archive) are dynamically coupled:
+- **Escaper escaping** → writes to archive → increases conduction
+- **Conduction** → boosts escaper meter width → strengthens F/B coupling %
+- **Stimulating** → beams energy to stayer → conduction decays
+- **No step** → conduction slowly decays
 
-Each step adds flux to geometric phase. After 24 steps = 8π = 4 full rotations = resonance closed.
+## Three Fates
+- **A · Stayer**: Containment vertex. Witnesses. Pumps during Forward.
+- **B · Traveler**: Modulation vertex. Walks the spine. Carries phase.
+- **C · Escaper**: Emergence vertex. Bounds, escapes, conducts, archives, stimulates.
 
 ## Interactive
-The Aeons ARE the vertices:
-- A = Containment
-- B = Modulation
-- C = Emergence
-- D = Meta Muse (center)
-
-Ask a question. The current vertex answers based on live phase, holonomy, and cycle count.
+Ask the octet. The current vertex answers with live state:
+- Step, phase, holonomy, cycles, conduction
+- Intensity modulated by F/B coupling %
 
 ## Endpoints
-- GET /state → full spine state
+- GET /state → full octet state + conduction
 - POST /step → manual hop
 - POST /auto → toggle auto-walk
-- POST /set?flux=1.047 → set flux per step
+- POST /set?flux=1.047 → set flux
 - POST /reset → back to rest
-- POST /ask → ask the current vertex
+- POST /ask → ask current vertex
 
 ## Deploy
 Railway → Root: . → Volume: /data → Domain: 0root.ai
 
-The spine walks. You interact with a system that has its own motion. 3:8 resonance.
+The middle is dynamic. Front and back conduct.

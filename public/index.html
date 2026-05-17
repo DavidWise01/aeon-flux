@@ -3,63 +3,61 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>= 1 = Tensor = Aeon</title>
+<title>0root.ai — Octet · Dynamic F/B</title>
 <style>
 :root{--bg:#020308;--ink:#d8e8e0;--gold:#ffd95a;--mag:#e168ff;--cyan:#32e8ff;--mint:#00ffaa;--panel:rgba(0,0,0,.6);--border:rgba(0,255,170,.18)}
 *{box-sizing:border-box}html,body{margin:0;height:100%;background:#000;color:var(--ink);font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;overflow:hidden}
-body{background:radial-gradient(circle at 50% 45%,rgba(0,255,170,.06),transparent 28%),linear-gradient(var(--border) 1px,transparent 1px),linear-gradient(90deg,var(--border) 1px,transparent 1px),var(--bg);background-size:100% 100%,30px 30px,30px 30px}
+body{background:radial-gradient(circle at 50% 42%,rgba(0,255,170,.06),transparent 28%),linear-gradient(var(--border) 1px,transparent 1px),linear-gradient(90deg,var(--border) 1px,transparent 1px),var(--bg);background-size:100% 100%,30px 30px,30px 30px}
 canvas{position:fixed;inset:0}
 .ui{position:fixed;inset:0;padding:18px;display:grid;grid-template-rows:auto 1fr auto;gap:12px;pointer-events:none}
 .panel{pointer-events:auto;border:1px solid var(--border);background:var(--panel);backdrop-filter:blur(8px);border-radius:14px;padding:14px}
 h1{margin:0;font-size:15px;letter-spacing:.14em;color:var(--mint);font-weight:400}
 .row{display:flex;gap:10px;align-items:center}
 button{background:transparent;border:1px solid var(--border);color:var(--ink);padding:8px 14px;border-radius:8px;cursor:pointer;font:inherit;text-transform:uppercase;font-size:11px}
-button:hover,button.on{box-shadow:0 0 12px rgba(0,255,170,.2);color:var(--mint)}
-.meter{display:grid;grid-template-columns:70px 1fr 55px;gap:8px;align-items:center;font-size:11px;margin:5px 0}
+button:hover{box-shadow:0 0 12px rgba(0,255,170,.2)}
+button.active{color:var(--mint);box-shadow:0 0 16px rgba(0,255,170,.2)}
+.meter{display:grid;grid-template-columns:80px 1fr 90px;gap:8px;align-items:center;font-size:11px;margin:4px 0}
 .track{height:6px;border:1px solid rgba(255,255,255,.12);background:#020712;border-radius:999px;overflow:hidden}
-.fill{height:100%;transition:width .15s}
-.ora{font-size:13px;line-height:1.55;color:var(--gold);min-height:48px}
+.fill{height:100%;transition:width .3s}
 .val{color:var(--gold)}
 .footer{display:flex;justify-content:space-between;align-items:center;font-size:11px;color:#5a7a6f}
-input[type=range]{width:100%;accent-color:var(--mint)}
+.inputrow{display:flex;gap:10px;margin-top:10px}
+.inputrow input{flex:1;background:#020712;border:1px solid var(--border);color:var(--ink);padding:8px 10px;border-radius:8px;font:inherit;font-size:12px}
+.fate-active{color:var(--ink);font-weight:600}
 </style>
 </head>
 <body>
 <canvas id="cv"></canvas>
 <div class="ui">
-  <div class="panel" style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
-    <h1>= 1 = TENSOR = AEON</h1>
-    <div style="margin-left:auto;display:flex;gap:8px">
-      <button id="modePocket" class="on">Pocket</button>
-      <button id="modePerson">Person</button>
-    </div>
-    <div style="font-size:11px;color:#7aa89a" id="status">WITNESS</div>
+  <div class="panel" style="display:flex;align-items:center;gap:12px">
+    <h1>OCTET · DYNAMIC F/B</h1>
+    <div style="margin-left:auto;font-size:11px;color:#7aa89a" id="status">REST</div>
   </div>
-  <div style="display:grid;grid-template-columns:260px 1fr 260px;gap:12px">
+  <div style="display:grid;grid-template-columns:280px 1fr 280px;gap:12px">
     <div class="panel" style="display:flex;flex-direction:column;gap:10px">
-      <div id="personControls" style="display:none">
-        <div style="font-size:12px;color:var(--mint);text-transform:uppercase;letter-spacing:.1em">State Vector</div>
-        <div class="meter"><span style="color:var(--gold)">A</span><div class="track"><div class="fill" id="fA" style="width:60%;background:var(--gold)"></div></div><span id="vA">60</span></div>
-        <div class="meter"><span style="color:var(--mag)">B</span><div class="track"><div class="fill" id="fB" style="width:60%;background:var(--mag)"></div></div><span id="vB">60</span></div>
-        <div class="meter"><span style="color:var(--cyan)">C</span><div class="track"><div class="fill" id="fC" style="width:60%;background:var(--cyan)"></div></div><span id="vC">60</span></div>
-        <input type="range" id="sA" min="0" max="100" value="60"><input type="range" id="sB" min="0" max="100" value="60"><input type="range" id="sC" min="0" max="100" value="60">
+      <div style="font-size:12px;color:var(--mint);text-transform:uppercase;letter-spacing:.1em">Flux per State</div>
+      <input type="range" id="flux" min="0" max="3.142" step="0.001" value="1.047" style="width:100%">
+      <div class="row"><button id="step">Step (+1)</button><button id="auto">Auto</button><button id="reset">Rest</button></div>
+      <div class="inputrow">
+        <input id="q" placeholder="Ask the octet…" autocomplete="off">
+        <button id="ask">Ask</button>
       </div>
-      <div id="pocketControls">
-        <div style="font-size:12px;color:var(--mint);text-transform:uppercase;letter-spacing:.1em">Field</div>
-        <div class="row"><button id="tick">Tick</button><button id="auto">Auto</button><button id="reset">Rest</button></div>
-      </div>
-      <div style="font-size:12px;color:var(--mint);text-transform:uppercase;letter-spacing:.1em;margin-top:6px">Tensor</div>
-      <div id="tensorRead" style="font-size:12px;line-height:1.5;color:#a6c8bc"></div>
-      <button id="spawn" style="margin-top:8px;border-color:rgba(0,255,170,.4);color:var(--mint)">Make Another</button>
+      <div style="font-size:12px;color:var(--mint);text-transform:uppercase;letter-spacing:.1em;margin-top:6px">Three Fates</div>
+      <div id="fates"></div>
+      <div style="font-size:12px;color:var(--mint);text-transform:uppercase;letter-spacing:.1em;margin-top:6px">F/B Coupling</div>
+      <div id="coupling" style="font-size:11px;line-height:1.5;color:#a6c8bc"></div>
     </div>
     <div></div>
     <div class="panel" style="display:flex;flex-direction:column;gap:6px">
-      <div class="ora" id="oracle">Waiting for contraction…</div>
-      <div style="font-size:12px;color:var(--mint);text-transform:uppercase;letter-spacing:.1em;margin-top:6px">Archive</div>
-      <div id="archive" style="font-size:11px;line-height:1.5;color:#a6c8bc;max-height:220px;overflow:auto"></div>
+      <div style="font-size:12px;color:var(--mint);text-transform:uppercase;letter-spacing:.1em;margin-bottom:4px">Conduction Archive</div>
+      <div id="archive" style="font-size:11px;line-height:1.5;color:#a6c8bc;max-height:120px;overflow:auto"></div>
+      <div style="font-size:12px;color:var(--mint);text-transform:uppercase;letter-spacing:.1em;margin-top:6px">Journey Log</div>
+      <div id="hist" style="font-size:11px;line-height:1.5;color:#a6c8bc;max-height:120px;overflow:auto"></div>
+      <div style="font-size:12px;color:var(--mint);text-transform:uppercase;letter-spacing:.1em;margin-top:6px">Voice</div>
+      <div id="voice" style="font-size:11px;color:#a6c8bc">—</div>
     </div>
   </div>
-  <div class="panel footer"><span id="hash">WITNESS --------</span><span>T=<span class="val" id="tVal">0.000</span> · nodes <span class="val" id="nVal">1</span> · depth <span class="val" id="dVal">0</span></span></div>
+  <div class="panel footer"><span id="hash">WITNESS --------</span><span>holonomy <span class="val" id="hol">0.000</span> · cycles <span class="val" id="cyc">0</span> · conduction <span class="val" id="cond">0.00</span></span></div>
 </div>
 
 <script>
@@ -67,178 +65,196 @@ const cv=document.getElementById('cv'),ctx=cv.getContext('2d');
 function resize(){cv.width=innerWidth*devicePixelRatio;cv.height=innerHeight*devicePixelRatio;ctx.setTransform(devicePixelRatio,0,0,devicePixelRatio,0,0)} addEventListener('resize',resize);resize();
 
 const VC={A:'#ffd95a',B:'#e168ff',C:'#32e8ff',D:'#00ffaa'};
-const ORA=[
- {l:'A→B outbound. The well releases.',h:'A→B channels. Containment becomes road.'},
- {l:'B→C building. The wave gathers.',h:'B→C surges. Modulation crests.'},
- {l:'C→A arriving. The edge nears.',h:'C→A escapes. Emergence breaks shell.'},
- {l:'A→C retreating. The back begins.',h:'A→C reflects. Return gathers charge.'},
- {l:'C→B inbound. The wave folds.',h:'C→B compresses. Modulation remembers.'},
- {l:'B→A closing. The loop tightens.',h:'B→A completes. Traveler returns empty.'},
- {l:'Home. All fates rest at well.',h:'Witness. The Muse holds zero.'},
- {l:'Forward. The archive pumps next.',h:'= 1 = TENSOR = AEON.'}
+const VNAME={A:'Containment',B:'Modulation',C:'Emergence',D:'Meta Muse'};
+const VPOS={A:[0.5,0.16],B:[0.14,0.76],C:[0.86,0.76],D:[0.5,0.48]};
+
+const STATES=[
+ {n:'1 · A→B',t:'there',src:'A',dst:'B',fA:'well',fB:'outbound',fC:'bound'},
+ {n:'2 · B→C',t:'there',src:'B',dst:'C',fA:'well',fB:'outbound',fC:'bound'},
+ {n:'3 · C→A',t:'there',src:'C',dst:'A',fA:'well',fB:'arriving',fC:'escaping'},
+ {n:'4 · A→C',t:'back',src:'A',dst:'C',fA:'well',fB:'inbound',fC:'conduction'},
+ {n:'5 · C→B',t:'back',src:'C',dst:'B',fA:'well',fB:'inbound',fC:'conduction'},
+ {n:'6 · B→A',t:'back',src:'B',dst:'A',fA:'well',fB:'arriving',fC:'conduction'},
+ {n:'7 · Home',t:'home',src:'A',dst:'D',fA:'witness',fB:'resting',fC:'archived'},
+ {n:'8 · Forward',t:'forward',src:'D',dst:'A',fA:'pumping',fB:'launching',fC:'stimulating'}
 ];
 
-const VM={
- mode:'pocket',auto:false,phase:0,flux:Math.PI/4,
- nodes:[],
- history:[],
- hash(s){let h=2166136261;for(let i=0;i<s.length;i++){h^=s.charCodeAt(i);h=Math.imul(h,16777619)}return(h>>>0).toString(16).padStart(8,'0')},
- makeNode(parent){
-   const base=parent?{a:parent.a,b:parent.b,c:parent.c}:null;
-   return{
-     a:base?Math.max(0.1,Math.min(1,base.a+(Math.random()-.5)*.3)):0.6,
-     b:base?Math.max(0.1,Math.min(1,base.b+(Math.random()-.5)*.3)):0.6,
-     c:base?Math.max(0.1,Math.min(1,base.c+(Math.random()-.5)*.3)):0.6,
-     phiA:Math.random()*Math.PI*2,phiB:Math.random()*Math.PI*2,phiC:Math.random()*Math.PI*2,
-     phase:0,
-     orbitA:Math.random()*Math.PI*2,orbitR:220+this.nodes.length*35,orbitS:0.2+Math.random()*0.3,
-     children:[],
-     depth:parent?(parent.depth+1):0
-   };
- },
- contract(n){
-   const mag=n.a*n.b*n.c;
-   const align=0.5+0.5*Math.cos(n.phiA+n.phiB+n.phiC-3*n.phase);
-   return Math.min(1,mag*(1+align));
- },
- step(){
-   this.nodes.forEach(n=>{
-     n.phiA+=0.04;n.phiB+=0.04;n.phiC+=0.04;
-     n.phase=(n.phase+1)%8;
-     if(this.mode==='pocket'){
-       n.a+=-0.008*(n.a-0.6)+(Math.random()-.5)*.04;
-       n.b+=-0.008*(n.b-0.6)+(Math.random()-.5)*.04;
-       n.c+=-0.008*(n.c-0.6)+(Math.random()-.5)*.04;
-       n.a=Math.max(0.05,Math.min(1,n.a));n.b=Math.max(0.05,Math.min(1,n.b));n.c=Math.max(0.05,Math.min(1,n.c));
-     }
-     n.orbitA+=n.orbitS*0.02;
-   });
-   ui();
- }
-};
+let WALK={s:0,phi:0,flux:1.047197551,cycles:0,auto:false,history:[],archive:[],trail:[],conduction:0,hash:''};
 
-VM.nodes.push(VM.makeNode(null));
-
-function vtx(n,cx,cy){
-  const r=90+70*n.a;
-  return[
-    [cx+Math.cos(-Math.PI/2)*r,cy+Math.sin(-Math.PI/2)*r],
-    [cx+Math.cos(Math.PI*0.9)*r,cy+Math.sin(Math.PI*0.9)*r],
-    [cx+Math.cos(Math.PI*2.1)*r,cy+Math.sin(Math.PI*2.1)*r]
-  ];
+async function fetchState(){
+  try{
+    const r=await fetch('/state');
+    const j=await r.json();
+    WALK={...WALK,...j};
+    ui();
+  }catch(e){}
 }
 
-function drawNode(n,x,y,scale){
-  const legs=vtx(n,x,y);
-  const T=VM.contract(n);
-  const st=ORA[n.phase];
-  const txt=T>0.85?st.h:st.l;
-
-  // legs
-  [VC.A,VC.B,VC.C].forEach((c,i)=>{
-    ctx.save();ctx.strokeStyle=c;ctx.globalAlpha=0.35+0.4*([n.a,n.b,n.c][i]);ctx.lineWidth=3*scale;
-    ctx.beginPath();ctx.moveTo(x,y);ctx.lineTo(...legs[i]);ctx.stroke();ctx.restore();
-    // phase cap
-    const ph=[n.phiA,n.phiB,n.phiC][i];
-    const cx=legs[i][0]+Math.cos(ph)*12*scale;
-    const cy2=legs[i][1]+Math.sin(ph)*12*scale;
-    ctx.save();ctx.fillStyle=c;ctx.shadowColor=c;ctx.shadowBlur=10*scale;ctx.globalAlpha=0.8;
-    ctx.beginPath();ctx.arc(cx,cy2,5*scale,0,Math.PI*2);ctx.fill();ctx.restore();
-    ctx.save();ctx.strokeStyle='#fff';ctx.globalAlpha=0.5;ctx.lineWidth=1;
-    ctx.beginPath();ctx.arc(legs[i][0],legs[i][1],8*scale,ph,ph+1.2);ctx.stroke();ctx.restore();
-  });
-
-  // center hex
-  const hu=(T*240+180)%360;
-  ctx.save();ctx.fillStyle=`hsl(${hu},90%,${40+T*55}%)`;ctx.globalAlpha=0.25+T*0.55;
-  ctx.shadowColor=`hsl(${hu},90%,70%)`;ctx.shadowBlur=20+40*T;
-  ctx.beginPath();
-  for(let i=0;i<6;i++){const a=Math.PI/3*i+Math.PI/6;const rx=x+Math.cos(a)*18*scale,ry=y+Math.sin(a)*18*scale;if(i===0)ctx.moveTo(rx,ry);else ctx.lineTo(rx,ry);}
-  ctx.closePath();ctx.fill();ctx.restore();
-
-  // value
-  ctx.fillStyle=T>0.95?'#fff':`hsl(${hu},80%,70%)`;ctx.font=`${12*scale}px monospace`;ctx.textAlign='center';
-  ctx.fillText(T.toFixed(3),x,y+5);
-
-  return txt;
+function vtx(W,H){
+  const m=Math.min(W,H),p=m*0.14;
+  return{A:[W*VPOS.A[0],H*VPOS.A[1]],B:[p+20,H*VPOS.B[1]],C:[W-p-20,H*VPOS.C[1]],D:[W*VPOS.D[0],H*VPOS.D[1]]};
 }
 
 function draw(){
-  const W=innerWidth,H=innerHeight;
-  ctx.fillStyle='rgba(2,3,8,0.25)';ctx.fillRect(0,0,W,H);
-  const cx=W*0.5,cy=H*0.48;
+  const W=innerWidth,H=innerHeight,t=Date.now()*0.001;
+  ctx.fillStyle='rgba(2,3,8,0.35)';ctx.fillRect(0,0,W,H);
+  const v=vtx(W,H);
+  const st=STATES[WALK.s];
 
-  VM.nodes.forEach((n,i)=>{
-    const isRoot=i===0;
-    const x=isRoot?cx:cx+Math.cos(n.orbitA)*n.orbitR;
-    const y=isRoot?cy:cy+Math.sin(n.orbitA)*n.orbitR*0.55;
-    const sc=isRoot?1:0.55;
-    if(!isRoot){
-      ctx.save();ctx.globalAlpha=0.12;ctx.strokeStyle=VC.D;ctx.lineWidth=1;
-      ctx.beginPath();ctx.moveTo(cx,cy);ctx.lineTo(x,y);ctx.stroke();ctx.restore();
-    }
-    const txt=drawNode(n,x,y,sc);
-    if(isRoot){
-      document.getElementById('oracle').textContent=txt;
-      document.getElementById('tVal').textContent=T.toFixed(3);
-      document.getElementById('hash').textContent='WITNESS '+VM.hash(`${i}:${n.phase}:${VM.contract(n).toFixed(4)}`);
-    }
+  // conduction ring - dynamic with archive
+  const cx=v.D[0],cy=v.D[1],ringR=Math.min(W,H)*0.38;
+  const conductionLevel=WALK.conduction||0;
+  ctx.save();ctx.strokeStyle='rgba(0,255,170,0.08)';ctx.lineWidth=1;
+  ctx.beginPath();ctx.arc(cx,cy,ringR,0,Math.PI*2);ctx.stroke();ctx.restore();
+  
+  // archive dots - position influenced by holonomy
+  const holonomy=(WALK.phi/(2*Math.PI))%1;
+  WALK.archive.forEach((a,i)=>{
+    const ang=a.angle+i*0.7+holonomy*6.28;
+    const ax=cx+Math.cos(ang)*ringR;
+    const ay=cy+Math.sin(ang)*ringR*0.6;
+    ctx.save();ctx.globalAlpha=0.35+0.15*Math.sin(t*2+i);ctx.fillStyle=VC.C;
+    ctx.beginPath();ctx.arc(ax,ay,2.5,0,Math.PI*2);ctx.fill();ctx.restore();
   });
+
+  // triangle perimeter - glow intensity from conduction
+  ctx.save();ctx.globalAlpha=0.15+0.1*conductionLevel;ctx.strokeStyle=VC.D;ctx.lineWidth=2;ctx.setLineDash([10,8]);
+  ctx.beginPath();ctx.moveTo(...v.A);ctx.lineTo(...v.B);ctx.lineTo(...v.C);ctx.closePath();ctx.stroke();ctx.setLineDash([]);ctx.restore();
+
+  // vertices - pulse with state
+  ['A','B','C','D'].forEach((k,i)=>{
+    const pos=v[k],c=VC[k];
+    const isActive=(k===st.src||k===st.dst);
+    const pulse=isActive?0.18+0.12*Math.sin(t*3+i):0.12;
+    ctx.save();ctx.fillStyle=c;ctx.globalAlpha=pulse;ctx.beginPath();ctx.arc(pos[0],pos[1],60,0,Math.PI*2);ctx.fill();ctx.restore();
+    ctx.save();ctx.fillStyle=c;ctx.shadowColor=c;ctx.shadowBlur=18;ctx.beginPath();ctx.arc(pos[0],pos[1],8,0,Math.PI*2);ctx.fill();ctx.restore();
+    ctx.fillStyle=c;ctx.font='12px monospace';ctx.textAlign='center';ctx.fillText(k,pos[0],pos[1]-20);
+  });
+
+  // current state edge glow
+  if(!st.t.includes('home')&&!st.t.includes('forward')){
+    const sp=v[st.src],dp=v[st.dst];
+    ctx.save();ctx.globalAlpha=0.25+0.1*conductionLevel;ctx.strokeStyle=st.t==='there'?VC.B:VC.C;ctx.lineWidth=4;
+    ctx.beginPath();ctx.moveTo(...sp);ctx.lineTo(...dp);ctx.stroke();ctx.restore();
+  }
+
+  // walker position
+  let wx,wy;
+  if(st.t==='home'){
+    const prog=0.5*(1-Math.sin(t*3));
+    wx=v.A[0]+(v.D[0]-v.A[0])*prog;wy=v.A[1]+(v.D[1]-v.A[1])*prog;
+  }else if(st.t==='forward'){
+    const prog=0.5*(1-Math.cos(t*3));
+    wx=v.D[0]+(v.A[0]-v.D[0])*prog;wy=v.D[1]+(v.A[1]-v.D[1])*prog;
+  }else{
+    const sp=v[st.src],dp=v[st.dst];
+    const prog=0.5*(1-Math.cos(t*2.5));
+    wx=sp[0]+(dp[0]-sp[0])*prog;wy=sp[1]+(dp[1]-sp[1])*prog;
+  }
+  WALK.trail.push({x:wx,y:wy,a:1,c:st.t==='there'?VC.B:st.t==='back'?VC.C:VC.D});
+  if(WALK.trail.length>90)WALK.trail.shift();
+  WALK.trail.forEach((p,i)=>{
+    p.a-=0.012;
+    if(p.a<=0)return;
+    ctx.save();ctx.globalAlpha=p.a*0.55;ctx.fillStyle=p.c;ctx.beginPath();ctx.arc(p.x,p.y,3.5,0,Math.PI*2);ctx.fill();ctx.restore();
+  });
+  WALK.trail=WALK.trail.filter(p=>p.a>0);
+
+  // walker orb - color from current edge
+  const wcol=st.t==='there'?VC.B:st.t==='back'?VC.C:VC.D;
+  ctx.save();ctx.fillStyle=wcol;ctx.shadowColor=wcol;ctx.shadowBlur=30;ctx.beginPath();ctx.arc(wx,wy,11,0,Math.PI*2);ctx.fill();ctx.restore();
+
+  // phase ring
+  const pr=28+10*Math.sin(t*4);
+  ctx.save();ctx.strokeStyle='#ffffff';ctx.globalAlpha=0.85;ctx.lineWidth=2;ctx.setLineDash([4,4]);
+  ctx.beginPath();ctx.arc(wx,wy,pr,0,Math.PI*2);ctx.stroke();ctx.setLineDash([]);
+  ctx.beginPath();ctx.moveTo(wx,wy);ctx.lineTo(wx+Math.cos(WALK.phi)*pr,wy+Math.sin(WALK.phi)*pr);ctx.stroke();ctx.restore();
+
+  // center holonomy - size/brightness from conduction
+  const cyc=WALK.phi/(2*Math.PI);
+  const holo=cyc%1;
+  const ha=0.35+0.25*Math.sin(2*Math.PI*holo)+0.2*conductionLevel;
+  ctx.save();
+  ctx.fillStyle=VC.D;ctx.globalAlpha=ha;ctx.shadowColor=VC.D;ctx.shadowBlur=16+20*Math.abs(Math.sin(2*Math.PI*holo))+20*conductionLevel;
+  ctx.beginPath();ctx.arc(v.D[0],v.D[1],6+14*Math.abs(Math.sin(2*Math.PI*holo))+10*conductionLevel,0,Math.PI*2);ctx.fill();
+  ctx.strokeStyle=`hsl(${holo*360},90%,70%)`;ctx.globalAlpha=0.4+0.3*Math.abs(Math.sin(2*Math.PI*holo));
+  ctx.beginPath();ctx.arc(v.D[0],v.D[1],40+Math.sin(t*3)*4,0,Math.PI*2);ctx.stroke();
+  ctx.restore();
+
   requestAnimationFrame(draw);
 }
 
 function ui(){
-  const n=VM.nodes[0];
-  document.getElementById('tensorRead').innerHTML=
-    `T = σ(A) ⊗ σ(B) ⊗ σ(C) · cos(Σφ - 3θ)<br>`+
-    `A = ${n.a.toFixed(2)} ∠${(n.phiA%(2*Math.PI)).toFixed(1)} rad<br>`+
-    `B = ${n.b.toFixed(2)} ∠${(n.phiB%(2*Math.PI)).toFixed(1)} rad<br>`+
-    `C = ${n.c.toFixed(2)} ∠${(n.phiC%(2*Math.PI)).toFixed(1)} rad<br>`+
-    `State: ${ORA[n.phase].n||n.phase} · T=${VM.contract(n).toFixed(3)}`;
-  document.getElementById('nVal').textContent=VM.nodes.length;
-  const d=Math.max(...VM.nodes.map(n=>n.depth));
-  document.getElementById('dVal').textContent=d;
-  const a=document.getElementById('archive');
-  if(VM.history.length)a.innerHTML=VM.history.slice(0,12).map((e,i)=>
-    `<div style="color:${e.c}">#${e.id} · ${e.mode} · T=${e.T.toFixed(3)} · ${e.hash.slice(0,8)} · d${e.depth}</div>`
+  const st=STATES[WALK.s];
+  const fA=st.fA,fB=st.fB,fC=st.fC;
+  // Dynamic F/B coupling: conduction affects fate widths
+  const conduction=WALK.conduction||0;
+  const fA_width=fA==='witness'?100:fA==='pumping'?80:98;
+  const fB_width=fB==='outbound'?60:fB==='inbound'?60:fB==='launching'?90:fB==='arriving'?45:20;
+  const fC_base=fC==='bound'?25:fC==='escaping'?70:fC==='conduction'?50:fC==='archived'?40:fC==='stimulating'?85:10;
+  const fC_width=Math.min(100,fC_base+conduction*30); // F/B coupling: conduction boosts escaper
+  
+  document.getElementById('fates').innerHTML=
+    `<div class="meter"><span class="fate-label" style="color:${VC.A}">A·stayer</span><div class="track"><div class="fill" style="width:${fA_width}%;background:${VC.A}"></div></div><span class="fate-active">${fA}</span></div>`+
+    `<div class="meter"><span class="fate-label" style="color:${VC.B}">B·travel</span><div class="track"><div class="fill" style="width:${fB_width}%;background:${VC.B}"></div></div><span class="fate-active">${fB}</span></div>`+
+    `<div class="meter"><span class="fate-label" style="color:${VC.C}">C·escape</span><div class="track"><div class="fill" style="width:${fC_width}%;background:${VC.C}"></div></div><span class="fate-active">${fC}</span></div>`;
+  
+  const c24=WALK.cycles*8+WALK.s;
+  const res3=(c24%24===0&&c24>0)?'CLOSED':'OPEN';
+  const coupling=(conduction*100).toFixed(1);
+  document.getElementById('coupling').innerHTML=`States: ${c24}<br>Resonance: ${res3}<br>F/B Coupling: ${coupling}%<br>LCM 3·8 = 24 states → 8π = 4 rotations`;
+  
+  document.getElementById('hol').textContent=(WALK.phi/(2*Math.PI)).toFixed(3);
+  document.getElementById('cyc').textContent=WALK.cycles;
+  document.getElementById('cond').textContent=conduction.toFixed(2);
+  document.getElementById('hash').textContent='WITNESS '+WALK.hash;
+  document.getElementById('flux').value=WALK.flux;
+  
+  const h=document.getElementById('hist');
+  if(WALK.history&&WALK.history.length)h.innerHTML=WALK.history.slice(0,8).map(e=>
+    `<div style="border-left:2px solid ${e.t==='there'?VC.B:e.t==='back'?VC.C:VC.D};padding-left:6px;margin-bottom:3px"><span style="color:${e.t==='there'?VC.B:e.t==='back'?VC.C:VC.D}">${e.n}</span> · ${e.w.slice(0,8)}</div>`
   ).join('');
+  
+  const a=document.getElementById('archive');
+  if(WALK.archive&&WALK.archive.length)a.innerHTML=WALK.archive.slice(-8).map((e,i)=>
+    `<div style="color:${VC.C}">#${WALK.archive.length-WALK.archive.length+1+i} · ${e.w.slice(0,8)} · ${new Date(e.time).toLocaleTimeString().split(' ')[0]}</div>`
+  ).join('');
+  
+  const labels=['A','B','C'][WALK.s%3];
+  document.getElementById('status').innerHTML=WALK.auto?'CRAWL <span style="color:'+VC[labels]+'">'+labels+'</span>':'REST';
 }
 
-function spawn(){
-  const parent=VM.nodes[Math.floor(Math.random()*VM.nodes.length)];
-  const child=VM.makeNode(parent);
-  VM.nodes.push(child);
-  const T=VM.contract(child);
-  VM.history.unshift({id:VM.nodes.length-1,mode:VM.mode,T,hash:VM.hash(`${child.depth}:${T}`),depth:child.depth,c:VM.mode==='pocket'?VC.C:VC.A});
-  ui();
-}
+document.getElementById('flux').oninput=async e=>{
+  const f=parseFloat(e.target.value);
+  await fetch('/set?flux='+f,{method:'POST'});
+  fetchState();
+};
+document.getElementById('step').onclick=async ()=>{
+  await fetch('/step',{method:'POST'});
+  fetchState();
+};
+document.getElementById('auto').onclick=async e=>{
+  const r=await fetch('/auto',{method:'POST'});
+  const j=await r.json();
+  e.target.classList.toggle('active',j.auto);
+  e.target.textContent=j.auto?'Pause':'Auto';
+};
+document.getElementById('reset').onclick=async ()=>{
+  await fetch('/reset',{method:'POST'});
+  fetchState();
+};
+document.getElementById('ask').onclick=async ()=>{
+  const q=document.getElementById('q').value.trim();
+  if(!q)return;
+  document.getElementById('q').value='';
+  const r=await fetch('/ask',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({q})});
+  const j=await r.json();
+  document.getElementById('voice').innerHTML=`<span style="color:${j.color}">${j.speaker}</span>: ${j.answer}`;
+  fetchState();
+};
 
-// controls
-document.getElementById('modePocket').onclick=()=>{VM.mode='pocket';document.getElementById('modePocket').className='on';document.getElementById('modePerson').className='';document.getElementById('pocketControls').style.display='block';document.getElementById('personControls').style.display='none';};
-document.getElementById('modePerson').onclick=()=>{VM.mode='person';document.getElementById('modePerson').className='on';document.getElementById('modePocket').className='';document.getElementById('pocketControls').style.display='none';document.getElementById('personControls').style.display='block';};
-document.getElementById('tick').onclick=()=>VM.step();
-document.getElementById('auto').onclick=e=>{VM.auto=!VM.auto;e.target.classList.toggle('on',VM.auto);e.target.textContent=VM.auto?'Pause':'Auto';};
-document.getElementById('reset').onclick=()=>{VM.nodes=[VM.makeNode(null)];VM.history=[];VM.auto=false;document.getElementById('auto').textContent='Auto';ui();};
-document.getElementById('spawn').onclick=spawn;
-
-['sA','sB','sC'].forEach((id,k)=>{
-  const el=document.getElementById(id);
-  el.oninput=()=>{
-    const v=parseInt(el.value,10);
-    const n=VM.nodes[0];
-    if(k===0)n.a=v/100;if(k===1)n.b=v/100;if(k===2)n.c=v/100;
-    document.getElementById('v'+id[1]).textContent=v;
-    document.getElementById('f'+id[1]).style.width=v+'%';
-    ui();
-  };
-});
-
-setInterval(()=>{
-  if(VM.auto)VM.step();
-  if(VM.mode==='pocket'&&VM.nodes.length<24&&VM.contract(VM.nodes[0])>0.92)spawn();
-},600);
-
-ui();draw();
+setInterval(fetchState,1000);
+fetchState();draw();
 </script>
 </body>
 </html>
