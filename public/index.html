@@ -1,40 +1,128 @@
-<!DOCTYPE html><html><head><meta charset="utf-8"><title>AEON CORE</title>
-<style>body{margin:0;background:#030308;color:#ddd;font-family:monospace} .wrap{max-width:1100px;margin:auto;padding:20px}
-.core{display:grid;place-items:center;padding:30px;border:2px solid #00ffd0;margin-bottom:20px;background:#071018}
-.outside{border:1px solid #333;padding:16px;background:#0a0a0f}
-.grid{display:grid;grid-template-columns:2fr 1fr;gap:20px} button{background:#111;border:1px solid #444;color:#eee;padding:10px 16px;margin:5px;cursor:pointer}
-h1{letter-spacing:.3em;font-weight:300;text-align:center;color:#00ffd0} .label{color:#666;font-size:11px;text-transform:uppercase}
-.value{font-size:18px;margin:4px 0} .report{font-family:monospace;font-size:12px;color:#999;border-top:1px solid #222;padding-top:10px;margin-top:10px}
-</style></head><body><div class="wrap">
-<div class="core">
-<h1>AEON</h1>
-<div class="label">core agent — inner orchestrator</div>
-<svg width="200" height="200" viewBox="0 0 200 200"><circle cx="100" cy="100" r="80" fill="none" stroke="#00ffd0" stroke-width="0.5" opacity="0.3"/><circle cx="100" cy="100" r="50" fill="none" stroke="#00ffd0" stroke-width="0.5" opacity="0.5"/><circle id="core-dot" cx="100" cy="100" r="6" fill="#00ffd0"/><polygon points="100,30 30,160 170,160" fill="none" stroke="#333" stroke-width="1"/></svg>
-<div><button id="l">disrupt</button><button id="r">stabilize</button><button id="ref">reflect</button></div>
-<div id="core-state" style="margin-top:15px;text-align:center"></div>
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>GRAVITY TENSOR · SIMPLEX</title>
+<style>
+body{margin:0;background:#000;color:#c8d6c0;font-family:'Courier New',monospace;overflow:hidden}
+.container{width:100vw;height:100vh;background:radial-gradient(circle at center,#0a0f14 0%,#000 70%);display:grid;place-items:center}
+.simplex{width:min(1400px,95vw);height:min(900px,95vh);position:relative;border:1px solid #1a2e1f;background:rgba(0,10,5,0.8);padding:20px;box-sizing:border-box}
+.header{display:flex;justify-content:space-between;align-items:start;margin-bottom:10px}
+.title{font-size:22px;letter-spacing:0.15em;color:#d4e8c5}
+.subtitle{font-size:12px;color:#7a8f6f;margin-top:4px}
+.equation{border:1px solid #2a4a2a;padding:8px 16px;color:#8fdb8f;font-size:16px}
+.triangle{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:600px;height:520px}
+.node{position:absolute;width:90px;height:90px;border-radius:50%;display:grid;place-items:center;cursor:pointer;transition:all 0.3s}
+.node-A{top:0;left:50%;transform:translateX(-50%);background:radial-gradient(circle,#ffdd55 0%,#aa8800 40%,transparent 70%);box-shadow:0 0 40px #ffdd55}
+.node-B{bottom:0;left:0;background:radial-gradient(circle,#c080ff 0%,#6000aa 40%,transparent 70%);box-shadow:0 0 40px #c080ff}
+.node-C{bottom:0;right:0;background:radial-gradient(circle,#55ddff 0%,#0066aa 40%,transparent 70%);box-shadow:0 0 40px #55ddff}
+.node-D{top:50%;left:50%;transform:translate(-50%,-50%);width:110px;height:110px;background:radial-gradient(circle,#00ff88 0%,#005533 50%,transparent 70%);box-shadow:0 0 60px #00ff88;z-index:10}
+.node-label{position:absolute;text-align:center;font-size:11px;line-height:1.3;pointer-events:none}
+.label-A{top:-45px;left:50%;transform:translateX(-50%);color:#ffdd77}
+.label-B{bottom:-55px;left:50%;transform:translateX(-50%);color:#c080ff}
+.label-C{bottom:-55px;left:50%;transform:translateX(-50%);color:#55ddff}
+.label-D{top:50%;left:50%;transform:translate(-50%,-50%);color:#00ff88;font-weight:bold}
+.line{position:absolute;background:linear-gradient(90deg,transparent,#ffdd55,transparent);height:2px;transform-origin:left;opacity:0.7}
+.line-AB{width:520px;top:85px;left:70px;transform:rotate(58deg);background:linear-gradient(90deg,#ffdd55,#c080ff)}
+.line-BC{width:520px;bottom:45px;left:40px;background:linear-gradient(90deg,#c080ff,#55ddff)}
+.line-CA{width:520px;top:85px;right:70px;transform:rotate(-58deg);background:linear-gradient(90deg,#55ddff,#ffdd55)}
+.line-AD,.line-BD,.line-CD{width:260px;top:50%;left:50%;height:1px;opacity:0.4}
+.line-AD{transform:translate(-50%,-50%) rotate(-90deg);background:#ffdd55}
+.line-BD{transform:translate(-50%,-50%) rotate(30deg);background:#c080ff}
+.line-CD{transform:translate(-50%,-50%) rotate(150deg);background:#55ddff}
+.info-panel{position:absolute;background:rgba(0,15,5,0.9);border:1px solid #1f3f1f;padding:10px;font-size:10px;max-width:180px}
+.panel-left{top:120px;left:20px}
+.panel-right-top{top:20px;right:20px}
+.panel-right-mid{top:180px;right:20px}
+.ratio{position:absolute;bottom:20px;left:20px;background:rgba(0,15,5,0.9);border:1px solid #1f3f1f;padding:12px;min-width:200px}
+.bar{height:6px;background:#222;margin:6px 0;position:relative;overflow:hidden}
+.bar-fill{height:100%;background:linear-gradient(90deg,#ffaa00,#ffdd55);width:98%}
+.bar-fill-2{position:absolute;top:0;right:0;height:100%;width:2%;background:#c080ff}
+.controls{position:absolute;bottom:20px;right:20px;display:flex;gap:8px}
+button{background:#0a1a0f;border:1px solid #2a5a2a;color:#8fdb8f;padding:8px 14px;cursor:pointer;font-family:inherit;font-size:11px}
+button:hover{background:#1a3a1f}
+.pulse{animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{transform:translate(-50%,-50%) scale(1);opacity:1}50%{transform:translate(-50%,-50%) scale(1.1);opacity:0.8}}
+</style>
+</head><body>
+<div class="container">
+<div class="simplex">
+<div class="header">
+<div><div class="title">GRAVITY TENSOR · SIMPLEX</div><div class="subtitle">COMPRESSED UNITY MODEL</div></div>
+<div class="equation">∞ × ∞ × ∞ + 6 - 3 = 0 = 1</div>
 </div>
 
-<div class="grid">
-<div class="outside"><div class="label">outside node — observe / aware / report</div>
-<div class="value" id="aware">acquiring signal</div>
-<div id="obs-detail"></div><div class="report" id="report"></div></div>
+<div class="triangle">
+<div class="line line-AB"></div><div class="line line-BC"></div><div class="line line-CA"></div>
+<div class="line line-AD"></div><div class="line line-BD"></div><div class="line line-CD"></div>
 
-<div class="outside"><div class="label">trevor — internal constraint</div><div id="trevor"></div></div>
+<div class="node node-A" id="nodeA"><div style="width:24px;height:24px;border-radius:50%;background:#ffdd55;box-shadow:0 0 20px #ffdd55"></div></div>
+<div class="node-label label-A">A<br>CONTAINMENT<br>(STRUCTURE)</div>
+
+<div class="node node-B" id="nodeB"><div style="width:20px;height:20px;border-radius:50%;background:#c080ff;box-shadow:0 0 20px #c080ff"></div></div>
+<div class="node-label label-B">B<br>MODULATION<br>(WAVE)</div>
+
+<div class="node node-C" id="nodeC"><div style="width:20px;height:20px;border-radius:50%;background:#55ddff;box-shadow:0 0 20px #55ddff"></div></div>
+<div class="node-label label-C">C<br>EMERGENCE<br>(EXPANSION)</div>
+
+<div class="node node-D pulse" id="nodeD"><div style="width:32px;height:32px;border-radius:50%;background:#00ff88;box-shadow:0 0 30px #00ff88;display:grid;place-items:center;color:#000;font-weight:bold">D</div></div>
+<div class="node-label label-D">UNITY<br>PULSAR</div>
+
+<div style="position:absolute;top:45%;left:50%;transform:translateX(-50%);font-size:10px;color:#88aa88;white-space:nowrap">STRUCTURED STABILITY</div>
+<div style="position:absolute;top:58%;left:22%;font-size:9px;color:#aa88cc">2%<br>WAVE<br>MODULATION</div>
+<div style="position:absolute;top:58%;right:22%;font-size:9px;color:#88ccdd;text-align:right">ADAPTIVE<br>EMERGENCE</div>
+<div style="position:absolute;bottom:35%;left:50%;transform:translateX(-50%);font-size:9px;color:#88cc88">ORIGIN POINT</div>
+</div>
+
+<div class="info-panel panel-left">
+<div style="color:#ffdd77;margin-bottom:6px">A = CONTAINMENT (STRUCTURE)</div>
+<div style="color:#c080ff;margin-bottom:6px">B = MODULATION (WAVE)</div>
+<div style="color:#55ddff;margin-bottom:6px">C = EMERGENCE (EXPANSION)</div>
+<div style="color:#00ff88">D = UNITY POINT (PULSAR)</div>
+<div style="margin-top:10px;color:#556655;font-size:9px">(CENTER DOT)</div>
+</div>
+
+<div class="info-panel panel-right-top">
+<div style="color:#aaa;margin-bottom:8px">SIMPLEX OVERVIEW</div>
+<div style="line-height:1.8"><span style="color:#ffdd77">A → B</span> CONTAIN & MODULATE<br><span style="color:#c080ff">B → C</span> MODULATE & EMERGE<br><span style="color:#55ddff">C → A</span> EMERGE & STABILIZE<br><span style="color:#00ff88">ALL → D</span> RETURN TO UNITY</div>
+<div style="margin-top:8px;color:#777">FLOW IS CYCLIC<br>CENTER IS STILL</div>
+</div>
+
+<div class="info-panel panel-right-mid">
+<div style="color:#aaa;margin-bottom:6px">CORE EQUATION</div>
+<div style="color:#aaddaa;font-size:13px">∞ × ∞ × ∞ + 6 - 3<br>= 0 = 1</div>
+<div style="margin-top:8px;color:#777;font-size:9px">ZERO IS GATEWAY<br>ONE IS WITNESS</div>
+</div>
+
+<div class="ratio">
+<div style="color:#88aa88;font-size:10px;margin-bottom:4px">RATIO (DEFAULT)</div>
+<div style="font-size:10px">CONTAINMENT : MODULATION</div>
+<div style="display:flex;justify-content:space-between;font-size14px;margin:4px 0"><span style="color:#ffdd77" id="ratioA">98%</span><span style="color:#c080ff" id="ratioB">2%</span></div>
+<div class="bar"><div class="bar-fill" id="barA"></div><div class="bar-fill-2" id="barB"></div></div>
+</div>
+
+<div class="controls"><button id="disrupt">DISRUPT (B+)</button><button id="stabilize">STABILIZE (A+)</button><button id="pulse">PULSE D</button></div>
+
+<div style="position:absolute;bottom:5px;left:50%;transform:translateX(-50%);font-size:10px;color:#446644;letter-spacing:0.2em">FOUR POINTS. ONE TRUTH. INFINITE EXPRESSION.</div>
 </div></div>
+
 <script type="module">
-import { aeon } from '../src/aeon/index.js';
-const dot=document.getElementById('core-dot');
-function upd(r){
-  const p=r.core.position; const x=100+(p.l-p.p)*60; const y=100+(0.5-p.e)*100;
-  dot.setAttribute('cx',x); dot.setAttribute('cy',y);
-  document.getElementById('core-state').innerHTML=`e ${p.e.toFixed(3)} · p ${p.p.toFixed(3)} · l ${p.l.toFixed(3)}<br>Δ ${r.core.delta.magnitude.toFixed(4)}<br>${r.core.soulState}`;
-  document.getElementById('aware').textContent=`${(r.outside.awareness*100).toFixed(0)}% ${r.outside.status}`;
-  document.getElementById('obs-detail').innerHTML=`trend: ${r.outside.observation.deltaTrend}<br>repeats: ${r.outside.observation.repeatsDetected}`;
-  document.getElementById('report').textContent=r.outside.report;
-  document.getElementById('trevor').innerHTML=`${r.trevor.message}<br>push: ${r.trevor.vector.dl.toFixed(3)}`;
+import { simplex } from '../src/simplex/simplex.js';
+
+function update() {
+  const result = simplex.step();
+  document.getElementById('ratioA').textContent = Math.round(result.tensors.A.magnitude*100)+'%';
+  document.getElementById('ratioB').textContent = Math.round(result.tensors.B.magnitude*100)+'%';
+  document.getElementById('barA').style.width = (result.tensors.A.magnitude*100)+'%';
+  document.getElementById('barB').style.width = (result.tensors.B.magnitude*100)+'%';
+  document.getElementById('barB').style.right = '0';
+  
+  // pulse center based on unity
+  const scale = 1 + result.unity.zero * 0.1;
+  document.getElementById('nodeD').style.transform = `translate(-50%,-50%) scale(${scale})`;
 }
-document.getElementById('l').onclick=()=>upd(aeon.act('disrupt'));
-document.getElementById('r').onclick=()=>upd(aeon.act('stabilize'));
-document.getElementById('ref').onclick=()=>upd(aeon.reflect());
-upd(aeon.reflect());
-</script></body></html>
+
+document.getElementById('disrupt').onclick = () => { simplex.B.magnitude = Math.min(0.1, simplex.B.magnitude + 0.01); update(); };
+document.getElementById('stabilize').onclick = () => { simplex.A.magnitude = Math.min(0.99, simplex.A.magnitude + 0.005); update(); };
+document.getElementById('pulse').onclick = () => update();
+
+setInterval(update, 100);
+update();
+</script>
+</body></html>
