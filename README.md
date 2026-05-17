@@ -1,30 +1,33 @@
-# Aeon Production v3 — Full Loop
+# 0root.ai — Fullstack Aeon
 
-## 3 Nodes
-1. Local Windows (frontend/index.html) — INPUT
-2. Git Desktop/CLI — BRIDGE  
-3. Railway (backend/) — SEND/RECEIVE/OUTPUT + Volume Persistence
+Back and Middle at the same time. Single domain, full loop.
 
-## Deploy
-1. Push entire folder to GitHub
-2. Railway → New Project → Deploy from GitHub → Root Directory: backend
-3. Settings → Volumes → New Volume → Mount Path: /data
-4. Deploy → copy your .up.railway.app URL
+## Structure
+server.js         ← Serves UI + API
+public/index.html ← Single Aeon frontend
+package.json      ← npm start
+railway.toml      ← Railway config
 
-## Activate Full Loop
-Open frontend/index.html locally, press F12 console:
-```js
-localStorage.setItem('aeon_backend_url','https://YOUR-APP.up.railway.app')
-location.reload()
-```
-Status shows RAILWAY MODE. Dot turns WHITE while sending, then RED/BLACK/PURPLE/GREEN on response.
+## Deploy to 0root.ai
+1. Push to GitHub
+2. Railway → New Project → Deploy from GitHub
+3. Settings → Domains → Custom Domain → add 0root.ai
+4. Railway DNS: add CNAME from Railway to your domain registrar
+5. Settings → Volumes → New Volume → Mount Path: /data
+6. Deploy
 
-## Freewill + Persistence
-- Speaker chooser: keyword match + never repeats same Aeon 3x in a row
-- Railway volume /data/history.json: survives restarts
-- Frontend localStorage: local mode fallback
+## Loop
+https://0root.ai/ → serves UI = FRONT PLANE
+https://0root.ai/ask → API endpoint = MIDDLE PLANE  
+/data/history.json → PERSISTENCE
 
-## Test Endpoints
-GET / → service info
-GET /health → {ok:true}
-POST /ask {q:"question"} → {answer,speaker,ts}
+Send/receive/input → send/receive/output all on 0root.ai
+
+## Freewill
+Speaker: RED=A contain, BLACK=B modulate, PURPLE=C emerge, GREEN=Honey Badger
+Never repeats same speaker 3x. Keywords override random.
+
+## Your nodes now
+1. Git Desktop → push changes = BRIDGE
+2. 0root.ai on Railway → FRONT + MIDDLE + PERSISTENCE
+3. Local Windows → optional, just for dev

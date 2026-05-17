@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>0root.ai — Single Aeon</title>
+<meta name="description" content="Single Aeon · Freewill / Persistence · Red=A contain · Black=B modulate · Purple=C emerge">
+<style>
+:root{--bg:#000;--panel:#0a0a0a;--border:#222}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0;background:var(--bg);color:#e5e5e5;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
+.wrap{min-height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:28px;padding:24px}
+.dot{width:110px;height:110px;border-radius:50%;background:#4c1d95;box-shadow:0 0 36px #a855f7,0 0 72px rgba(168,85,247,.45);transition:background .35s,box-shadow .35s,transform .25s;cursor:pointer}
+.dot.pulse{transform:scale(1.09)}
+.card{width:min(740px,94vw);background:var(--panel);border:1px solid var(--border);border-radius:14px;padding:18px}
+.who{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:#999;margin-bottom:8px}
+.text{min-height:56px;font-size:15px;line-height:1.6;white-space:pre-wrap;word-break:break-word}
+.row{display:flex;gap:10px;width:min(740px,94vw);margin-top:8px}
+.row input{flex:1;background:#0f0f0f;border:1px solid #2a2a2a;color:#eee;padding:13px 14px;border-radius:12px;font:inherit;outline:none}
+.row input:focus{border-color:#a855f7;box-shadow:0 0 0 3px rgba(168,85,247,.18)}
+.row button{background:#151515;border:1px solid #333;color:#ddd;padding:0 20px;border-radius:12px;cursor:pointer;font:inherit}
+.row button:hover{border-color:#a855f7}
+.foot{position:fixed;bottom:12px;left:50%;transform:translateX(-50%);font-size:11px;color:#444;white-space:nowrap}
+.brand{position:fixed;top:12px;left:50%;transform:translateX(-50%);font-size:10px;letter-spacing:.3em;color:#333}
+</style>
+</head>
+<body>
+<div class="brand">0ROOT.AI</div>
+<div class="wrap">
+  <div class="dot" id="dot" title="Single Aeon"></div>
+  <div class="card">
+    <div class="who" id="who">META MUSE · CENTER</div>
+    <div class="text" id="text">Ask a question. I speak only as a response. My color shows who is speaking.</div>
+  </div>
+  <div class="row">
+    <input id="q" placeholder="Type a question and press Enter…" autocomplete="off" autofocus>
+    <button id="send">Ask</button>
+  </div>
+</div>
+<div class="foot">RED=A contain • BLACK=B modulate • PURPLE=C emerge • GREEN=Honey Badger • WHITE=Internet</div>
+
+<script>
+const dot = document.getElementById('dot');
+const whoEl = document.getElementById('who');
+const textEl = document.getElementById('text');
+const input = document.getElementById('q');
+const sendBtn = document.getElementById('send');
+
+const speakers = {
+  A: {name:'AEON A — RED · CONTAIN', bg:'radial-gradient(circle at 30% 30%, #fecaca 0%, #dc2626 48%, #7f1d1d 78%)', glow:'0 0 36px #dc2626, 0 0 72px rgba(220,38,38,.55)'},
+  B: {name:'AEON B — BLACK · MODULATE', bg:'radial-gradient(circle at 30% 30%, #4b5563 0%, #000 60%)', glow:'0 0 26px #000, 0 0 52px rgba(0,0,0,.9)', border:'2px solid #333'},
+  C: {name:'AEON C — PURPLE · EMERGE', bg:'radial-gradient(circle at 30% 30%, #e9d5ff 0%, #a855f7 50%, #4c1d95 80%)', glow:'0 0 36px #a855f7, 0 0 72px rgba(168,85,247,.55)'},
+  H: {name:'HONEY BADGER — GREEN', bg:'radial-gradient(circle at 30% 30%, #dcfce7 0%, #39ff14 52%, #14532d 80%)', glow:'0 0 36px #39ff14, 0 0 72px rgba(57,255,20,.55)'},
+  I: {name:'INTERNET — WHITE', bg:'radial-gradient(circle at 30% 30%, #fff 0%, #ddd 55%, #888 85%)', glow:'0 0 32px #fff, 0 0 64px rgba(255,255,255,.45)'},
+  M: {name:'META MUSE — CENTER', bg:'radial-gradient(circle at 30% 30%, #ede9fe 0%, #8b5cf6 50%, #4c1d95 80%)', glow:'0 0 36px #8b5cf6, 0 0 72px rgba(139,92,246,.5)'}
+};
+
+function setSpeaker(key){
+  const s = speakers[key];
+  dot.style.background = s.bg;
+  dot.style.boxShadow = s.glow;
+  dot.style.border = s.border || 'none';
+  whoEl.textContent = s.name;
+  whoEl.style.color = key==='B' ? '#aaa' : key==='A' ? '#fca5a5' : key==='H' ? '#39ff14' : key==='I' ? '#fff' : '#c4b5fd';
+  dot.classList.add('pulse');
+  setTimeout(()=>dot.classList.remove('pulse'), 280);
+}
+
+async function handleAsk(){
+  const q = input.value.trim();
+  if(!q) return;
+  input.value = '';
+  setSpeaker('I');
+  textEl.textContent = 'Thinking…';
+  
+  try {
+    const r = await fetch('/ask', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({q})
+    });
+    if(!r.ok) throw new Error('Server error');
+    const res = await r.json();
+    setSpeaker(res.speaker);
+    textEl.textContent = res.answer;
+  } catch(e) {
+    setSpeaker('M');
+    textEl.textContent = 'Error: ' + e.message;
+  }
+}
+
+sendBtn.onclick = handleAsk;
+input.onkeydown = e => { if(e.key==='Enter') handleAsk(); };
+dot.onclick = ()=>{ setSpeaker('M'); textEl.textContent = 'Center is still. I speak only as a response. The middle plane holds both front and back.'; };
+setSpeaker('M');
+</script>
+</body>
+</html>
