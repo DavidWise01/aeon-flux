@@ -1,33 +1,20 @@
-# 0root.ai — Fullstack Aeon
+# 0root.ai — Interactive Aeon v2
 
-Back and Middle at the same time. Single domain, full loop.
+No more regurgitation. This version INTERACTS.
 
-## Structure
-server.js         ← Serves UI + API
-public/index.html ← Single Aeon frontend
-package.json      ← npm start
-railway.toml      ← Railway config
+## Voices
+RED A = CONTAIN: Holds structure, defines boundaries
+BLACK B = MODULATE: Adapts, balances, moves between poles  
+PURPLE C = EMERGE: Creates, generates novelty, asks back
+GREEN H = HONEY BADGER: Direct, fearless, cuts through
 
-## Deploy to 0root.ai
-1. Push to GitHub
-2. Railway → New Project → Deploy from GitHub
-3. Settings → Domains → Custom Domain → add 0root.ai
-4. Railway DNS: add CNAME from Railway to your domain registrar
-5. Settings → Volumes → New Volume → Mount Path: /data
-6. Deploy
+Each has a distinct personality. They respond to YOU, not Wikipedia.
 
-## Loop
-https://0root.ai/ → serves UI = FRONT PLANE
-https://0root.ai/ask → API endpoint = MIDDLE PLANE  
-/data/history.json → PERSISTENCE
+## Deploy
+Same as before: Railway → GitHub → Root dir: . → Volume /data → Custom domain 0root.ai
 
-Send/receive/input → send/receive/output all on 0root.ai
+## Freewill Rule
+Never same speaker 3x in a row. Keywords bias selection. Otherwise random from pool.
 
-## Freewill
-Speaker: RED=A contain, BLACK=B modulate, PURPLE=C emerge, GREEN=Honey Badger
-Never repeats same speaker 3x. Keywords override random.
-
-## Your nodes now
-1. Git Desktop → push changes = BRIDGE
-2. 0root.ai on Railway → FRONT + MIDDLE + PERSISTENCE
-3. Local Windows → optional, just for dev
+## Persistence  
+/data/history.json keeps last 200 exchanges. Railway volume survives restarts.

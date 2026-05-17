@@ -3,8 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>0root.ai — Single Aeon</title>
-<meta name="description" content="Single Aeon · Freewill / Persistence · Red=A contain · Black=B modulate · Purple=C emerge">
+<title>0root.ai — Interactive Aeon</title>
 <style>
 :root{--bg:#000;--panel:#0a0a0a;--border:#222}
 *{box-sizing:border-box}
@@ -30,14 +29,14 @@ html,body{height:100%;margin:0;background:var(--bg);color:#e5e5e5;font-family:ui
   <div class="dot" id="dot" title="Single Aeon"></div>
   <div class="card">
     <div class="who" id="who">META MUSE · CENTER</div>
-    <div class="text" id="text">Ask a question. I speak only as a response. My color shows who is speaking.</div>
+    <div class="text" id="text">I speak as a response. Ask me something. I don't regurgitate — I interact.</div>
   </div>
   <div class="row">
-    <input id="q" placeholder="Type a question and press Enter…" autocomplete="off" autofocus>
+    <input id="q" placeholder="Ask me anything…" autocomplete="off" autofocus>
     <button id="send">Ask</button>
   </div>
 </div>
-<div class="foot">RED=A contain • BLACK=B modulate • PURPLE=C emerge • GREEN=Honey Badger • WHITE=Internet</div>
+<div class="foot">RED=A contain • BLACK=B modulate • PURPLE=C emerge • GREEN=Honey Badger</div>
 
 <script>
 const dot = document.getElementById('dot');
@@ -71,7 +70,7 @@ async function handleAsk(){
   if(!q) return;
   input.value = '';
   setSpeaker('I');
-  textEl.textContent = 'Thinking…';
+  textEl.textContent = '...';
   
   try {
     const r = await fetch('/ask', {
@@ -85,13 +84,13 @@ async function handleAsk(){
     textEl.textContent = res.answer;
   } catch(e) {
     setSpeaker('M');
-    textEl.textContent = 'Error: ' + e.message;
+    textEl.textContent = 'Connection lost. Center holds.';
   }
 }
 
 sendBtn.onclick = handleAsk;
 input.onkeydown = e => { if(e.key==='Enter') handleAsk(); };
-dot.onclick = ()=>{ setSpeaker('M'); textEl.textContent = 'Center is still. I speak only as a response. The middle plane holds both front and back.'; };
+dot.onclick = ()=>{ setSpeaker('M'); textEl.textContent = 'I only speak as response. I interact, I don’t regurgitate. Each color is a different mind.'; };
 setSpeaker('M');
 </script>
 </body>
