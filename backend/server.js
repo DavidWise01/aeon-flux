@@ -26,7 +26,6 @@ function saveHistory(h) {
 }
 
 async function fetchInternet(q) {
-  // Wikipedia summary
   try {
     const url = `https://en.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(q)}`;
     const r = await fetch(url);
@@ -35,13 +34,11 @@ async function fetchInternet(q) {
       if (j.extract) return { text: j.extract, source: 'Wikipedia', url: j.content_urls?.desktop?.page };
     }
   } catch {}
-  // DuckDuckGo fallback
   try {
     const ddg = `https://api.duckduckgo.com/?q=${encodeURIComponent(q)}&format=json&no_html=1&skip_disambig=1`;
     const r = await fetch(ddg);
     const j = await r.json();
     if (j.AbstractText) return { text: j.AbstractText, source: 'DuckDuckGo', url: j.AbstractURL };
-    if (j.RelatedTopics?.[0]?.Text) return { text: j.RelatedTopics[0].Text, source: 'DuckDuckGo' };
   } catch {}
   return null;
 }
@@ -57,6 +54,13 @@ function chooseSpeaker(q, history) {
   const filtered = (last3.length===3 && last3[0]===last3[1] && last3[1]===last3[2]) ? pool.filter(k=>k!==last3[0]) : pool;
   return filtered[Math.floor(Math.random()*filtered.length)];
 }
+
+app.get('/', (req,res)=> res.json({
+  ok: true,
+  service: 'Aeon Backend',
+  endpoints: ['GET /health', 'POST /ask', 'GET /history'],
+  message: 'POST /ask with {q:"question"} to speak'
+}));
 
 app.get('/health', (req,res)=> res.json({ok:true, ts:Date.now()}));
 

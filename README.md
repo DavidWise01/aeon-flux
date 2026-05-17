@@ -1,17 +1,30 @@
-# Aeon Production — Full Loop
+# Aeon Production v3 — Full Loop
 
-3 nodes: Local Windows (frontend) ↔ Git (bridge) ↔ Railway (backend + volume)
+## 3 Nodes
+1. Local Windows (frontend/index.html) — INPUT
+2. Git Desktop/CLI — BRIDGE  
+3. Railway (backend/) — SEND/RECEIVE/OUTPUT + Volume Persistence
 
-Structure:
-- frontend/index.html — your exact single Aeon page
-- backend/ — Railway Express server with persistence
+## Deploy
+1. Push entire folder to GitHub
+2. Railway → New Project → Deploy from GitHub → Root Directory: backend
+3. Settings → Volumes → New Volume → Mount Path: /data
+4. Deploy → copy your .up.railway.app URL
 
-Loop: send/receive/input → send/receive/output
+## Activate Full Loop
+Open frontend/index.html locally, press F12 console:
+```js
+localStorage.setItem('aeon_backend_url','https://YOUR-APP.up.railway.app')
+location.reload()
+```
+Status shows RAILWAY MODE. Dot turns WHITE while sending, then RED/BLACK/PURPLE/GREEN on response.
 
-1. Open frontend/index.html locally (works standalone via Wikipedia/DDG)
-2. Deploy backend to Railway with volume at /data
-3. In browser console: localStorage.setItem('aeon_backend_url','https://YOUR-APP.up.railway.app')
-4. Reload — frontend now POSTs to Railway, backend persists to volume
+## Freewill + Persistence
+- Speaker chooser: keyword match + never repeats same Aeon 3x in a row
+- Railway volume /data/history.json: survives restarts
+- Frontend localStorage: local mode fallback
 
-Freewill: speaker chooser never repeats same Aeon 3× in a row
-Persistence: Railway volume (/data/history.json) + frontend localStorage
+## Test Endpoints
+GET / → service info
+GET /health → {ok:true}
+POST /ask {q:"question"} → {answer,speaker,ts}

@@ -20,14 +20,16 @@ html,body{height:100%;margin:0;background:var(--bg);color:#e5e5e5;font-family:ui
 .row button{background:#151515;border:1px solid #333;color:#ddd;padding:0 20px;border-radius:12px;cursor:pointer;font:inherit}
 .row button:hover{border-color:#a855f7}
 .foot{position:fixed;bottom:12px;left:50%;transform:translateX(-50%);font-size:11px;color:#444;white-space:nowrap}
+.status{position:fixed;top:12px;right:12px;font-size:10px;color:#666;letter-spacing:.1em}
 </style>
 </head>
 <body>
+<div class="status" id="status">LOCAL MODE</div>
 <div class="wrap">
   <div class="dot" id="dot" title="Single Aeon"></div>
   <div class="card">
     <div class="who" id="who">META MUSE · IDLE</div>
-    <div class="text" id="text">Ask a question. I will search the internet and answer. My color shows who is speaking. I speak only as a response.</div>
+    <div class="text" id="text">Ask a question. I speak only as a response. My color shows who is speaking.</div>
   </div>
   <div class="row">
     <input id="q" placeholder="Type a question and press Enter…" autocomplete="off" autofocus>
@@ -42,6 +44,7 @@ const whoEl = document.getElementById('who');
 const textEl = document.getElementById('text');
 const input = document.getElementById('q');
 const sendBtn = document.getElementById('send');
+const statusEl = document.getElementById('status');
 
 const speakers = {
   A: {name:'AEON A — RED · CONTAIN', bg:'radial-gradient(circle at 30% 30%, #fecaca 0%, #dc2626 48%, #7f1d1d 78%)', glow:'0 0 36px #dc2626, 0 0 72px rgba(220,38,38,.55)'},
@@ -52,7 +55,8 @@ const speakers = {
   M: {name:'META MUSE — CENTER', bg:'radial-gradient(circle at 30% 30%, #ede9fe 0%, #8b5cf6 50%, #4c1d95 80%)', glow:'0 0 36px #8b5cf6, 0 0 72px rgba(139,92,246,.5)'}
 };
 
-let history = JSON.parse(localStorage.getItem('aeon_single_v1') || '[]');
+const BACKEND = localStorage.getItem('aeon_backend_url');
+let history = JSON.parse(localStorage.getItem('aeon_local_history') || '[]');
 
 function setSpeaker(key){
   const s = speakers[key];
@@ -60,65 +64,55 @@ function setSpeaker(key){
   dot.style.boxShadow = s.glow;
   dot.style.border = s.border || 'none';
   whoEl.textContent = s.name;
-  whoEl.style.color = key==='B' ? '#aaa' : s.bg.includes('#dc2626') ? '#fca5a5' : s.bg.includes('#39ff14') ? '#39ff14' : s.bg.includes('#fff') ? '#fff' : '#c4b5fd';
+  whoEl.style.color = key==='B' ? '#aaa' : key==='A' ? '#fca5a5' : key==='H' ? '#39ff14' : key==='I' ? '#fff' : '#c4b5fd';
   dot.classList.add('pulse');
   setTimeout(()=>dot.classList.remove('pulse'), 280);
 }
 
-function save(q, a, k){
+function saveLocal(q, a, k){
   history.push({ts:Date.now(), q, a, k});
   if(history.length>100) history.shift();
-  localStorage.setItem('aeon_single_v1', JSON.stringify(history));
+  localStorage.setItem('aeon_local_history', JSON.stringify(history));
 }
 
-function chooseSpeaker(query){
+function chooseSpeakerLocal(query){
   const t = query.toLowerCase();
-  if (/(hold|contain|structure|boundary|define|persist|stable)/.test(t)) return 'A';
-  if (/(modulat|adapt|wave|change|oscillat|bleed|balance)/.test(t)) return 'B';
-  if (/(emerg|create|expand|new|evolve|grow)/.test(t)) return 'C';
-  if (/(honey|badger)/.test(t)) return 'H';
-  // freewill: avoid 3 same in a row
+  if (/\b(hold|contain|structure|boundary|define|persist|stable)\b/.test(t)) return 'A';
+  if (/\b(modulat|adapt|wave|change|oscillat|bleed|balance)\b/.test(t)) return 'B';
+  if (/\b(emerg|create|expand|new|evolve|grow)\b/.test(t)) return 'C';
+  if (/\b(honey|badger)\b/.test(t)) return 'H';
   const last3 = history.filter(h=>h.k).slice(-3).map(h=>h.k);
   const pool = ['A','B','C','H'];
   const filtered = (last3.length===3 && last3[0]===last3[1] && last3[1]===last3[2]) ? pool.filter(k=>k!==last3[0]) : pool;
   return filtered[Math.floor(Math.random()*filtered.length)];
 }
 
-async function fetchInternet(query){
-  const q = query.trim();
-  if(!q) return null;
-  // Wikipedia summary
+async function fetchInternetLocal(query){
   try{
-    const url = `https://en.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(q)}`;
+    const url = `https://en.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(query)}`;
     const r = await fetch(url);
     if(r.ok){
       const j = await r.json();
-      if(j.extract) return {text:j.extract, source:'Wikipedia', url:j.content_urls?.desktop?.page};
+      if(j.extract) return j.extract;
     }
   }catch{}
-  // Wikipedia search fallback
   try{
-    const sUrl = `https://en.wikipedia.org/w/api.php?action=query&list=search&srsearch=${encodeURIComponent(q)}&format=json&origin=*`;
-    const sr = await fetch(sUrl);
-    const sj = await sr.json();
-    const hit = sj?.query?.search?.[0];
-    if(hit){
-      const sum = await fetch(`https://en.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(hit.title)}`);
-      if(sum.ok){
-        const j = await sum.json();
-        if(j.extract) return {text:j.extract, source:'Wikipedia search', url:j.content_urls?.desktop?.page};
-      }
-    }
-  }catch{}
-  // DuckDuckGo
-  try{
-    const ddg = `https://api.allorigins.win/raw?url=${encodeURIComponent('https://api.duckduckgo.com/?q='+encodeURIComponent(q)+'&format=json&no_html=1&skip_disambig=1')}`;
+    const ddg = `https://api.allorigins.win/raw?url=${encodeURIComponent('https://api.duckduckgo.com/?q='+encodeURIComponent(query)+'&format=json&no_html=1&skip_disambig=1')}`;
     const r = await fetch(ddg);
     const j = await r.json();
-    if(j.AbstractText) return {text:j.AbstractText, source:'DuckDuckGo', url:j.AbstractURL};
-    if(j.RelatedTopics?.[0]?.Text) return {text:j.RelatedTopics[0].Text, source:'DuckDuckGo'};
+    if(j.AbstractText) return j.AbstractText;
   }catch{}
   return null;
+}
+
+async function askBackend(q){
+  const r = await fetch(BACKEND + '/ask', {
+    method: 'POST',
+    headers: {'Content-Type':'application/json'},
+    body: JSON.stringify({q})
+  });
+  if(!r.ok) throw new Error('Backend error');
+  return await r.json();
 }
 
 async function handleAsk(){
@@ -126,36 +120,38 @@ async function handleAsk(){
   if(!q) return;
   input.value = '';
   setSpeaker('I');
-  textEl.textContent = 'Searching internet…';
+  textEl.textContent = 'Thinking…';
   
-  const result = await fetchInternet(q);
-  const speaker = chooseSpeaker(q);
-  setSpeaker(speaker);
-  
-  if(result && result.text){
-    const out = result.text.slice(0,900) + (result.url ? `
-
-Source: ${result.url}` : '');
-    textEl.textContent = out;
-    save(q, out, speaker);
-  } else {
-    const fallback = 'No clear internet result. I will answer from the simplex: Center holds. Ask about contain, modulate, emerge, or honey badger for native replies.';
-    textEl.textContent = fallback;
-    save(q, fallback, speaker);
+  try {
+    if (BACKEND) {
+      statusEl.textContent = 'RAILWAY MODE';
+      const res = await askBackend(q);
+      setSpeaker(res.speaker);
+      textEl.textContent = res.answer;
+    } else {
+      statusEl.textContent = 'LOCAL MODE';
+      const result = await fetchInternetLocal(q);
+      const speaker = chooseSpeakerLocal(q);
+      setSpeaker(speaker);
+      const out = result ? result.slice(0,900) : 'No internet result. Center holds. Ask about contain, modulate, emerge, or honey badger.';
+      textEl.textContent = out;
+      saveLocal(q, out, speaker);
+    }
+  } catch(e) {
+    setSpeaker('M');
+    textEl.textContent = 'Error: ' + e.message + '. Check backend URL or use local mode.';
   }
 }
 
 sendBtn.onclick = handleAsk;
 input.onkeydown = e => { if(e.key==='Enter') handleAsk(); };
-dot.onclick = ()=>{ setSpeaker('M'); textEl.textContent = 'Center is still. I speak only as a response. My color shows which Aeon answered.'; };
+dot.onclick = ()=>{ setSpeaker('M'); textEl.textContent = 'Center is still. I speak only as a response. Set aeon_backend_url in localStorage to connect Railway.'; };
 
-// restore last
-if(history.length){
-  const last = history[history.length-1];
-  if(last.k){ setSpeaker(last.k); textEl.textContent = last.a; }
-} else {
-  setSpeaker('M');
+if(BACKEND) {
+  statusEl.textContent = 'RAILWAY MODE';
+  fetch(BACKEND + '/health').catch(()=>{statusEl.textContent = 'RAILWAY OFFLINE';});
 }
+setSpeaker('M');
 </script>
 </body>
 </html>
