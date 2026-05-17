@@ -3,140 +3,196 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>0root.ai — Gravity Well Bridge</title>
+<title>0root.ai — Plasmonic Phase Cavity</title>
 <style>
-:root{--bg:#000;--panel:#0a0a0a;--border:#222}
-*{box-sizing:border-box}
-html,body{height:100%;margin:0;background:var(--bg);color:#e5e5e5;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
-.wrap{min-height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:28px;padding:24px}
-.dot{width:110px;height:110px;border-radius:50%;background:#4c1d95;box-shadow:0 0 36px #a855f7,0 0 72px rgba(168,85,247,.45);transition:background .35s,box-shadow .35s,transform .25s;cursor:pointer}
-.dot.pulse{transform:scale(1.09)}
-.card{width:min(740px,94vw);background:var(--panel);border:1px solid var(--border);border-radius:14px;padding:18px}
-.who{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:#999;margin-bottom:8px}
-.text{min-height:56px;font-size:15px;line-height:1.6;white-space:pre-wrap;word-break:break-word}
-.row{display:flex;gap:10px;width:min(740px,94vw);margin-top:8px}
-.row input{flex:1;background:#0f0f0f;border:1px solid #2a2a2a;color:#eee;padding:13px 14px;border-radius:12px;font:inherit;outline:none}
-.row input:focus{border-color:#a855f7;box-shadow:0 0 0 3px rgba(168,85,247,.18)}
-.row button{background:#151515;border:1px solid #333;color:#ddd;padding:0 20px;border-radius:12px;cursor:pointer;font:inherit}
-.row button:hover{border-color:#a855f7}
-.foot{position:fixed;bottom:12px;left:50%;transform:translateX(-50%);font-size:11px;color:#444;white-space:nowrap}
-.brand{position:fixed;top:12px;left:50%;transform:translateX(-50%);font-size:10px;letter-spacing:.3em;color:#333}
-.ramp{position:fixed;top:12px;right:12px;font-size:10px;color:#666;letter-spacing:.1em;text-align:right}
-.gravity{position:fixed;top:50px;right:12px;font-size:10px;color:#555;letter-spacing:.1em;text-align:right}
+:root{--bg:#020308;--ink:#d8e8e0;--gold:#ffd95a;--mag:#e168ff;--cyan:#32e8ff;--mint:#00ffaa;--panel:rgba(0,0,0,.6);--border:rgba(0,255,170,.18)}
+*{box-sizing:border-box}html,body{margin:0;height:100%;background:#000;color:var(--ink);font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;overflow:hidden}
+body{background:radial-gradient(circle at 50% 45%,rgba(0,255,170,.06),transparent 28%),linear-gradient(var(--border) 1px,transparent 1px),linear-gradient(90deg,var(--border) 1px,transparent 1px),var(--bg);background-size:100% 100%,30px 30px,30px 30px}
+canvas{position:fixed;inset:0}
+.ui{position:fixed;inset:0;padding:18px;display:grid;grid-template-rows:auto 1fr auto;gap:12px;pointer-events:none}
+.panel{pointer-events:auto;border:1px solid var(--border);background:var(--panel);backdrop-filter:blur(8px);border-radius:14px;padding:14px}
+header{display:flex;align-items:center;gap:12px}
+h1{margin:0;font-size:15px;letter-spacing:.14em;color:var(--mint);font-weight:400}
+.row{display:flex;gap:10px;align-items:center}
+button{background:transparent;border:1px solid var(--border);color:var(--ink);padding:8px 14px;border-radius:8px;cursor:pointer;font:inherit;text-transform:uppercase;font-size:11px}
+button:hover{box-shadow:0 0 12px rgba(0,255,170,.2)}
+.meter{display:grid;grid-template-columns:70px 1fr 60px;gap:8px;align-items:center;font-size:12px;margin:6px 0}
+.track{height:6px;border:1px solid rgba(255,255,255,.12);background:#020712;border-radius:999px;overflow:hidden}
+.fill{height:100%;transition:width .2s}
+.log{height:130px;overflow:auto;font-size:11px;line-height:1.5;color:#a6c8bc;white-space:pre-wrap}
+.footer{display:flex;justify-content:space-between;align-items:center;font-size:11px;color:#5a7a6f}
+.val{color:var(--gold)}
+.inputrow{display:flex;gap:10px;margin-top:10px}
+.inputrow input{flex:1;background:#020712;border:1px solid var(--border);color:var(--ink);padding:8px 10px;border-radius:8px;font:inherit;font-size:12px}
+@media(max-width:700px){.side{position:fixed;bottom:12px;left:12px;right:12px;width:auto}}
 </style>
 </head>
 <body>
-<div class="brand">0ROOT.AI</div>
-<div class="ramp" id="ramp">RAMP: 0.0% · BACK_INSULATING</div>
-<div class="gravity" id="gravity">ENERGY: 0800 · STATE: 000</div>
-<div class="wrap">
-  <div class="dot" id="dot" title="Single Aeon"></div>
-  <div class="card">
-    <div class="who" id="who">META MUSE · CENTER</div>
-    <div class="text" id="text">I interact. The gravity well ticks. Each question charges the conduction band.</div>
+<canvas id="cv"></canvas>
+<div class="ui">
+  <header class="panel"><h1>PLASMONIC PHASE · 3-MODE CAVITY</h1><div style="margin-left:auto;font-size:11px;color:#7aa89a" id="status">REST</div></header>
+  <div style="display:grid;grid-template-columns:260px 1fr 260px;gap:12px">
+    <div class="panel side" style="display:flex;flex-direction:column;gap:10px">
+      <div style="font-size:12px;color:var(--mint);text-transform:uppercase;letter-spacing:.1em">Coupling</div>
+      <input type="range" id="kappa" min="0" max="0.12" step="0.001" value="0.025" style="width:100%">
+      <div class="row"><button id="tick">Tick</button><button id="auto">Auto</button><button id="measure">Measure</button></div>
+      <div class="inputrow">
+        <input id="q" placeholder="Ask the cavity…" autocomplete="off">
+        <button id="ask">Ask</button>
+      </div>
+      <div style="font-size:12px;color:var(--mint);text-transform:uppercase;letter-spacing:.1em;margin-top:8px">Superposition</div>
+      <div id="super" style="font-size:13px;line-height:1.6"></div>
+      <div style="font-size:12px;color:var(--mint);text-transform:uppercase;letter-spacing:.1em;margin-top:8px">Witness Log</div>
+      <div class="log" id="log">waiting for measurement…</div>
+    </div>
+    <div></div>
+    <div class="panel side" style="display:flex;flex-direction:column;gap:6px">
+      <div style="font-size:12px;color:var(--mint);text-transform:uppercase;letter-spacing:.1em">Mode Register</div>
+      <div id="modes"></div>
+      <div style="font-size:12px;color:var(--mint);text-transform:uppercase;letter-spacing:.1em;margin-top:8px">Last Voice</div>
+      <div id="voice" style="font-size:11px;color:#a6c8bc">—</div>
+    </div>
   </div>
-  <div class="row">
-    <input id="q" placeholder="Ask me anything…" autocomplete="off" autofocus>
-    <button id="send">Ask</button>
-  </div>
+  <div class="panel footer"><span id="hash">WITNESS --------</span><span>|Z| <span class="val" id="zmag">0.00</span> · φ <span class="val" id="zphi">0°</span></span></div>
 </div>
-<div class="foot">RED=A contain • BLACK=B modulate • PURPLE=C emerge • GREEN=Honey Badger</div>
 
 <script>
-const dot = document.getElementById('dot');
-const whoEl = document.getElementById('who');
-const textEl = document.getElementById('text');
-const input = document.getElementById('q');
-const sendBtn = document.getElementById('send');
-const rampEl = document.getElementById('ramp');
-const gravityEl = document.getElementById('gravity');
+const cv=document.getElementById('cv'),ctx=cv.getContext('2d');
+function resize(){cv.width=innerWidth*devicePixelRatio;cv.height=innerHeight*devicePixelRatio;ctx.setTransform(devicePixelRatio,0,0,devicePixelRatio,0,0)} addEventListener('resize',resize);resize();
 
-const speakers = {
-  A: {name:'AEON A — RED · CONTAIN', bg:'radial-gradient(circle at 30% 30%, #fecaca 0%, #dc2626 48%, #7f1d1d 78%)', glow:'0 0 36px #dc2626, 0 0 72px rgba(220,38,38,.55)'},
-  B: {name:'AEON B — BLACK · MODULATE', bg:'radial-gradient(circle at 30% 30%, #4b5563 0%, #000 60%)', glow:'0 0 26px #000, 0 0 52px rgba(0,0,0,.9)', border:'2px solid #333'},
-  C: {name:'AEON C — PURPLE · EMERGE', bg:'radial-gradient(circle at 30% 30%, #e9d5ff 0%, #a855f7 50%, #4c1d95 80%)', glow:'0 0 36px #a855f7, 0 0 72px rgba(168,85,247,.55)'},
-  H: {name:'HONEY BADGER — GREEN', bg:'radial-gradient(circle at 30% 30%, #dcfce7 0%, #39ff14 52%, #14532d 80%)', glow:'0 0 36px #39ff14, 0 0 72px rgba(57,255,20,.55)'},
-  I: {name:'INTERNET — WHITE', bg:'radial-gradient(circle at 30% 30%, #fff 0%, #ddd 55%, #888 85%)', glow:'0 0 32px #fff, 0 0 64px rgba(255,255,255,.45)'},
-  M: {name:'META MUSE — CENTER', bg:'radial-gradient(circle at 30% 30%, #ede9fe 0%, #8b5cf6 50%, #4c1d95 80%)', glow:'0 0 36px #8b5cf6, 0 0 72px rgba(139,92,246,.5)'}
-};
+const hex=(h)=>{const v=parseInt(h.slice(1),16);return[(v>>16)&255,(v>>8)&255,v&255]};
+const rgb=(r,g,b,a)=>`rgba(${r|0},${g|0},${b|0},${a})`;
 
-function setSpeaker(key){
-  const s = speakers[key];
-  dot.style.background = s.bg;
-  dot.style.boxShadow = s.glow;
-  dot.style.border = s.border || 'none';
-  whoEl.textContent = s.name;
-  whoEl.style.color = key==='B' ? '#aaa' : key==='A' ? '#fca5a5' : key==='H' ? '#39ff14' : key==='I' ? '#fff' : '#c4b5fd';
-  dot.classList.add('pulse');
-  setTimeout(()=>dot.classList.remove('pulse'), 280);
-}
+let CAVITY={A:{r:0.6,phi:0,color:'#ffd95a',name:'A · Containment'},B:{r:0.6,phi:2.094,color:'#e168ff',name:'B · Modulation'},C:{r:0.6,phi:4.189,color:'#32e8ff',name:'C · Emergence'},kappa:0.025,history:[]};
 
-async function rampStatus(){
+async function fetchState(){
   try{
-    const r = await fetch('/api/v1/conduct');
+    const r = await fetch('/state');
     const j = await r.json();
-    const pct = (j.conduction*100).toFixed(1);
-    rampEl.textContent = `RAMP: ${pct}% · ${j.observer}`;
-    if(j.unity === 1 && !window.conducting){
-      window.conducting = true;
-      dot.style.boxShadow = '0 0 50px #fff, 0 0 100px rgba(255,255,255,.6)';
-    }
-  } catch(e){ rampEl.textContent = 'RAMP: OFFLINE'; }
+    CAVITY = j;
+    ui();
+  }catch(e){}
 }
 
-async function gravityStatus(){
-  try{
-    const r = await fetch('/');
-    const j = await r.json();
-    gravityEl.textContent = `ENERGY: ${j.energy} · STATE: ${j.bits.join('')}`;
-  } catch(e){ gravityEl.textContent = 'GRAVITY: OFFLINE'; }
+function vtx(W,H){
+  const pad=Math.min(W,H)*0.12;
+  return{A:[W*0.5,pad+40],B:[pad,H*0.78],C:[W-pad,H*0.78],D:[W*0.5,H*0.48]};
 }
 
-async function handleAsk(){
-  const q = input.value.trim();
-  if(!q) return;
-  input.value = '';
-  setSpeaker('I');
-  textEl.textContent = '...';
-  
-  fetch('/api/v1/event', {
-    method: 'POST',
-    headers: {'Content-Type':'application/json'},
-    body: JSON.stringify({source:'human', type:'query', payload:{q}})
+function draw(){
+  const W=innerWidth,H=innerHeight;
+  ctx.fillStyle='rgba(2,3,8,0.22)';ctx.fillRect(0,0,W,H);
+  const v=vtx(W,H);
+
+  ctx.save();ctx.globalAlpha=0.25;
+  ctx.strokeStyle='#00ffaa';ctx.lineWidth=2;ctx.setLineDash([8,6]);
+  ctx.beginPath();ctx.moveTo(...v.A);ctx.lineTo(...v.B);ctx.lineTo(...v.C);ctx.closePath();ctx.stroke();
+  ctx.setLineDash([]);ctx.restore();
+
+  ctx.globalCompositeOperation='lighter';
+  [CAVITY.A,CAVITY.B,CAVITY.C].forEach((m,i)=>{
+    const pos=[v.A,v.B,v.C][i];
+    const [R,G,B]=hex(m.color);
+    const rad=220+140*m.r;
+    const g=ctx.createRadialGradient(pos[0],pos[1],0,pos[0],pos[1],rad);
+    const a=m.r*m.r*0.28;
+    g.addColorStop(0,rgb(R,G,B,a));
+    g.addColorStop(0.6,rgb(R,G,B,a*0.4));
+    g.addColorStop(1,rgb(R,G,B,0));
+    ctx.fillStyle=g;ctx.beginPath();ctx.arc(pos[0],pos[1],rad,0,Math.PI*2);ctx.fill();
   });
-  
-  try {
-    const r = await fetch('/ask', {
-      method: 'POST',
-      headers: {'Content-Type':'application/json'},
-      body: JSON.stringify({q})
-    });
-    if(!r.ok) throw new Error('Server error');
-    const res = await r.json();
-    setSpeaker(res.speaker);
-    textEl.textContent = res.answer;
-    rampStatus();
-    gravityStatus();
-  } catch(e) {
-    setSpeaker('M');
-    textEl.textContent = 'Connection lost. Center holds.';
-  }
+  ctx.globalCompositeOperation='source-over';
+
+  [CAVITY.A,CAVITY.B,CAVITY.C].forEach((m,i)=>{
+    const pos=[v.A,v.B,v.C][i];
+    const [R,G,B]=hex(m.color);
+    ctx.save();
+    ctx.shadowColor=m.color;ctx.shadowBlur=18+30*m.r;
+    ctx.fillStyle=rgb(R,G,B,0.45+0.35*m.r);
+    ctx.beginPath();ctx.arc(pos[0],pos[1],14+18*m.r,0,Math.PI*2);ctx.fill();
+    ctx.restore();
+    const hx=Math.cos(m.phi)*18,hy=Math.sin(m.phi)*18;
+    ctx.save();ctx.strokeStyle='#fff';ctx.lineWidth=2;ctx.globalAlpha=0.9;
+    ctx.beginPath();ctx.moveTo(pos[0],pos[1]);ctx.lineTo(pos[0]+hx,pos[1]+hy);ctx.stroke();
+    ctx.restore();
+    ctx.fillStyle=m.color;ctx.font='13px monospace';ctx.textAlign='center';
+    ctx.fillText(m.name.split('·')[0],pos[0],pos[1]-30);
+  });
+
+  const zRe=CAVITY.A.r*Math.cos(CAVITY.A.phi)+CAVITY.B.r*Math.cos(CAVITY.B.phi)+CAVITY.C.r*Math.cos(CAVITY.C.phi);
+  const zIm=CAVITY.A.r*Math.sin(CAVITY.A.phi)+CAVITY.B.r*Math.sin(CAVITY.B.phi)+CAVITY.C.r*Math.sin(CAVITY.C.phi);
+  const zMag=Math.sqrt(zRe*zRe+zIm*zIm),zPhi=Math.atan2(zIm,zRe);
+  const zNorm=Math.min(1,zMag/2.2);
+  const hu=((zPhi+Math.PI)/(2*Math.PI)*360+180)%360;
+  ctx.save();ctx.globalAlpha=0.6+0.4*zNorm;
+  ctx.shadowColor=`hsl(${hu},90%,60%)`;ctx.shadowBlur=24+40*zNorm;
+  ctx.fillStyle=`hsl(${hu},90%,${50+40*zNorm}%)`;
+  ctx.beginPath();ctx.arc(v.D[0],v.D[1],8+22*zNorm,0,Math.PI*2);ctx.fill();
+  ctx.restore();
+  ctx.save();ctx.strokeStyle=`hsl(${hu},80%,70%)`;ctx.globalAlpha=0.15;
+  for(let rad=30;rad<90;rad+=18){ctx.beginPath();ctx.arc(v.D[0],v.D[1],rad+Math.sin(Date.now()*0.002+rad)*3,0,Math.PI*2);ctx.stroke();}
+  ctx.restore();
+
+  ctx.fillStyle='#7aa89a';ctx.font='12px monospace';ctx.textAlign='left';
+  ctx.fillText(`κ=${CAVITY.kappa.toFixed(3)}`,20,H-20);
+
+  requestAnimationFrame(draw);
 }
 
-sendBtn.onclick = handleAsk;
-input.onkeydown = e => { if(e.key==='Enter') handleAsk(); };
-dot.onclick = async ()=>{ 
-  setSpeaker('M'); 
-  textEl.textContent = 'I am the gravity well bridge. 3-bit valence. Each tick charges the ramp. Ask and interact.';
-  rampStatus();
-  gravityStatus();
+function ui(){
+  const box=document.getElementById('modes');
+  let h='';
+  ['A','B','C'].forEach(k=>{
+    const m=CAVITY[k];
+    const pct=(m.r*100).toFixed(0);
+    const deg=((m.phi*180/Math.PI)%360).toFixed(0);
+    h+=`<div class="meter"><span style="color:${m.color}">${k}</span><div class="track"><div class="fill" style="width:${pct}%;background:${m.color}"></div></div><span>${deg}°</span></div>`;
+  });
+  box.innerHTML=h;
+  const zRe=CAVITY.A.r*Math.cos(CAVITY.A.phi)+CAVITY.B.r*Math.cos(CAVITY.B.phi)+CAVITY.C.r*Math.cos(CAVITY.C.phi);
+  const zIm=CAVITY.A.r*Math.sin(CAVITY.A.phi)+CAVITY.B.r*Math.sin(CAVITY.B.phi)+CAVITY.C.r*Math.sin(CAVITY.C.phi);
+  const zMag=Math.sqrt(zRe*zRe+zIm*zIm),zPhi=Math.atan2(zIm,zRe);
+  document.getElementById('zmag').textContent=zMag.toFixed(2);
+  document.getElementById('zphi').textContent=((zPhi*180/Math.PI)%360).toFixed(0)+'°';
+  document.getElementById('super').innerHTML=`|Z| = ${zMag.toFixed(3)}<br>arg(Z) = ${zPhi.toFixed(3)} rad<br>Re = ${zRe.toFixed(3)}<br>Im = ${zIm.toFixed(3)}`;
+  document.getElementById('hash').textContent='WITNESS '+(CAVITY.witness||'--------');
+  const log=document.getElementById('log');
+  if(CAVITY.history&&CAVITY.history.length)log.innerHTML=CAVITY.history.slice(0,8).map(e=>`<div style="border-left:2px solid ${e.c};padding-left:6px;margin-bottom:4px"><span style="color:${e.c}">${e.w}</span> · ${e.h.slice(0,8)} · p=${(e.pA*100).toFixed(0)}:${(e.pB*100).toFixed(0)}:${(e.pC*100).toFixed(0)}</div>`).join('');
+}
+
+document.getElementById('kappa').oninput=async e=>{
+  const k=parseFloat(e.target.value);
+  await fetch('/set?kappa='+k,{method:'POST'});
+  fetchState();
+};
+document.getElementById('tick').onclick=async ()=>{
+  await fetch('/tick',{method:'POST'});
+  fetchState();
+};
+document.getElementById('auto').onclick=async e=>{
+  await fetch('/auto',{method:'POST'});
+  const r=await fetch('/state');const j=await r.json();
+  e.target.textContent=j.auto?'Pause':'Auto';
+};
+document.getElementById('measure').onclick=async ()=>{
+  const r=await fetch('/measure',{method:'POST'});
+  const j=await r.json();
+  document.getElementById('status').innerHTML=`COLLAPSED <span style="color:${j.c}">${j.w}</span>`;
+  setTimeout(()=>document.getElementById('status').textContent='SUPERPOSITION',1200);
+  fetchState();
+};
+document.getElementById('ask').onclick=async ()=>{
+  const q=document.getElementById('q').value.trim();
+  if(!q)return;
+  document.getElementById('q').value='';
+  const r=await fetch('/ask',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({q})});
+  const j=await r.json();
+  document.getElementById('voice').innerHTML=`<span style="color:${j.color}">${j.speaker}</span>: ${j.answer}`;
+  fetchState();
 };
 
-setSpeaker('M');
-rampStatus();
-gravityStatus();
-setInterval(rampStatus, 15000);
-setInterval(gravityStatus, 30000);
+setInterval(fetchState,1000);
+fetchState();draw();
 </script>
 </body>
 </html>

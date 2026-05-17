@@ -1,39 +1,28 @@
-# 0root.ai — Gravity Well Bridge + 3-Cap Ramp
+# 0root.ai — Plasmonic Phase · 3-Mode Cavity
 
-Back and Middle at once. 3-bit valence well. Dead shells pre-paid. Conduction band free.
+Interactive cavity. Not regurgitation. The system evolves.
 
-## Equation: ∞×∞×∞+6-3=0=1
+## Backend State
+The 3 modes A, B, C have amplitude r and phase phi. They couple via kappa.
+- /state → full cavity state
+- /tick → advance one step
+- /auto → toggle auto-tick
+- /measure → collapse superposition, witness hash
+- /ask → Ask the cavity. Speaker chosen by mode amplitudes, not keywords.
 
-### Gravity Well (3-bit)
-- **State**: 000-111 (8 valence slots)
-- **Aeons**: A, B, C active bits
-- **Energy**: 0800 (rest) → 0880 (excited)
-- **Tick**: Every 30s, auto commit/push
-- **Endpoints**: /tick, /set, /
+## Voices
+The Aeons ARE the modes:
+- RED A = Containment mode. High r_A → A speaks about boundaries.
+- BLACK B = Modulation mode. High r_B → B speaks about waves/tension.
+- PURPLE C = Emergence mode. High r_C → C speaks about growth.
 
-### 3-Cap Ramp
-- **Cap 1**: /api/v1/event → session well
-- **DT1**: /api/v1/sync/dt1 → cache
-- **Cap 2**: /api/v1/cache → hot cache
-- **DT2**: /api/v1/sync/dt2 → archive + git push-back
-- **Cap 3**: /api/v1/archive → deep jsonl
-- **0→1**: /api/v1/conduct → conduction 0→1
+Response depends on |Z| superposition and phase, not your text.
 
-### Interactive /ask
-POST /ask {q:"..."} → {speaker:"A|B|C|H", answer:"..."}
+## Frontend
+Visualizes the cavity. Interference field, phase hands, superposition dot.
+Input box sends to /ask. The reply color matches the dominant mode.
 
-Voices interact:
-- RED A = CONTAIN
-- BLACK B = MODULATE  
-- PURPLE C = EMERGE
-- GREEN H = HONEY BADGER
+## Deploy
+Railway → Root: . → Volume: /data → Domain: 0root.ai
 
-Freewill: Never same speaker 3x. Keywords bias.
-
-### Deploy
-Railway → Root: . → Volume: /data → Env: GITHUB_TOKEN → Domain: 0root.ai
-
-Each tick: gravity well rotates, shells commit/push, archive writes.
-Each question: charges ramp, selects voice, interacts.
-
-Back conducts to front when unity=1.
+The cavity ticks on its own. You interact with a living system.
