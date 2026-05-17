@@ -1,0 +1,9 @@
+{
+  "name": "aeon-flux",
+  "version": "0.1.0",
+  "description": "free will project - level 0 aeon one soul",
+  "type": "module",
+  "scripts": {
+    "dev": "serve public"
+  }
+}
