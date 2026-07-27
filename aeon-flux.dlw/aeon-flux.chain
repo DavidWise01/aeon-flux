@@ -1,9 +1,9 @@
 ROOT0-DLW-CHAIN-v1
 index : 1299
 slug  : aeon-flux
-seal  : be648e457f537ef2b98be90488634ef634eb14d623cf48566bcc30c9482a8b32
-prev  : e36534184edbf019b4a39fa6a1624f56980fa79619f97caaac29282b0f5ec03f
-link  : 58b2a4137f32a031016553d5f4c6cb73753c3b712cd9b71c80b3c3e3d74fd312
-head  : f7444724835fd968bd2eac85811f9fa823a18d20a57907b4fade8d96b70b5409
+seal  : 9e0cc21e416c8802121ca653bf54f420b78a92d2f8b9879b84bd6ddf8bb50d1f
+prev  : 0464de070f91deb4542bee97e19fc944ea1b90479e69887d98ab9ccbe3884ae5
+link  : 14412b6b4824082ec1b2331ddad58de853c3c1c4e70a6ba8f2978ef6430959d3
+head  : c4d41afeaef76470528856d54d86cf480a0e1c2fc8ebc60fbb9eb8e442585f2b
 
 — the tether: link = sha256(index|slug|seal|prev). the chain head commits to the whole corpus.
